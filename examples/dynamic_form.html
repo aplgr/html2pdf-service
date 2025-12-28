@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Dynamic Form Demo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Merriweather:wght@700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/htmx.org@1.9.9"></script>
+  <style>
+    body {font-family: 'Inter', sans-serif;}
+    h1 {font-family: 'Merriweather', serif;}
+  </style>
+</head>
+<body class="p-4">
+  <h1 class="mb-4"><i class="bi bi-pencil-square"></i> Donation Form</h1>
+  <form id="donate-form" hx-get="javascript:generatePreview()" hx-trigger="input from:input" hx-target="#preview" hx-swap="innerHTML" class="mb-4">
+    <div class="mb-3">
+      <label for="name" class="form-label">Name</label>
+      <input type="text" id="name" class="form-control" placeholder="Your name">
+    </div>
+    <div class="mb-3">
+      <label for="email" class="form-label">Email</label>
+      <input type="email" id="email" class="form-control" placeholder="you@example.com">
+    </div>
+    <div class="mb-3">
+      <label for="amount" class="form-label">Amount</label>
+      <input type="number" id="amount" class="form-control" placeholder="50">
+    </div>
+  </form>
+
+  <div id="preview" class="border p-3">
+    <em>Filled preview will appear here.</em>
+  </div>
+
+  <script>
+    function generatePreview() {
+      const name = document.getElementById('name').value || '---';
+      const email = document.getElementById('email').value || '---';
+      const amount = document.getElementById('amount').value || '0';
+      return `<p><strong>Name:</strong> ${name}</p><p><strong>Email:</strong> ${email}</p><p><strong>Amount:</strong> $${amount}</p>`;
+    }
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

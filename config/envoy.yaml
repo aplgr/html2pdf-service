@@ -1,0 +1,86 @@
+static_resources:
+  listeners:
+    - name: listener_http
+      address:
+        socket_address:
+          address: 0.0.0.0
+          port_value: 80
+      filter_chains:
+        - filters:
+            - name: envoy.filters.network.http_connection_manager
+              typed_config:
+                "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+                stat_prefix: ingress_http
+                access_log:
+                  - name: envoy.access_loggers.stdout
+                    typed_config:
+                      "@type": type.googleapis.com/envoy.extensions.access_loggers.stream.v3.StdoutAccessLog
+                route_config:
+                  name: local_route
+                  virtual_hosts:
+                    - name: main
+                      domains: ["*"]
+                      routes:
+                        # API: everything under /api goes to the html2pdf service.
+                        # prefix_rewrite strips /api so the upstream can stay on root paths.
+                        - match: { prefix: "/api/" }
+                          route:
+                            cluster: html2pdf
+                            prefix_rewrite: "/"
+
+                        - match: { prefix: "/api" }
+                          route:
+                            cluster: html2pdf
+                            prefix_rewrite: "/"
+
+                        # Optional: expose health/metrics without /api prefix (delete if you don't need it)
+                        - match: { path: "/health" }
+                          route: { cluster: html2pdf }
+
+                        - match: { prefix: "/metrics" }
+                          route: { cluster: html2pdf }
+
+                        # Docs: everything else goes to nginx.
+                        - match: { prefix: "/" }
+                          route:
+                            cluster: docs
+                http_filters:
+                  - name: envoy.filters.http.router
+                    typed_config:
+                      "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
+
+  clusters:
+    - name: html2pdf
+      connect_timeout: 2s
+      type: STRICT_DNS
+      lb_policy: ROUND_ROBIN
+      load_assignment:
+        cluster_name: html2pdf
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address:
+                      address: html2pdf
+                      port_value: 8080
+
+    - name: docs
+      connect_timeout: 2s
+      type: STRICT_DNS
+      lb_policy: ROUND_ROBIN
+      load_assignment:
+        cluster_name: docs
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address:
+                      address: docs
+                      port_value: 8080
+
+admin:
+  access_log_path: /tmp/admin_access.log
+  address:
+    socket_address:
+      address: 0.0.0.0
+      port_value: 9901

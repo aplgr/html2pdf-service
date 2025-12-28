@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Shipping Label</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Merriweather:wght@700&display=swap" rel="stylesheet">
+  <style>
+    body {font-family: 'Inter', sans-serif;}
+    h1 {font-family: 'Merriweather', serif; font-size:1.2rem;}
+    .barcode {height:80px;border:2px solid #000;display:flex;align-items:center;justify-content:center;}
+  </style>
+</head>
+<body class="p-3">
+  <div class="border p-3">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <img src="https://picsum.photos/seed/shipping/100/50" alt="Logo" class="img-fluid">
+      <h1 class="mb-0"><i class="bi bi-box-seam"></i> Shipping Label</h1>
+    </div>
+    <div class="row">
+      <div class="col-6">
+        <h2 class="h6">From:</h2>
+        <address>
+          Sender Co.<br>1 Sender Way<br>Origin City, OR 97000
+        </address>
+      </div>
+      <div class="col-6">
+        <h2 class="h6">To:</h2>
+        <address>
+          Receiver Inc.<br>99 Destination Rd.<br>Dest City, CA 90000
+        </address>
+      </div>
+    </div>
+    <p><strong>Tracking #:</strong> TRK123456789</p>
+    <div class="barcode mb-2">Barcode</div>
+    <p class="small">Handle with care. If undeliverable, return to sender.</p>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

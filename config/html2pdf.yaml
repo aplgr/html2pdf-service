@@ -1,0 +1,67 @@
+server:
+  host: "0.0.0.0"
+  port: ":8080"
+  # Prefork creates multiple OS processes. That does NOT mix well with a shared Chrome pool.
+  # If you want more concurrency, increase pdf.chrome_pool_size instead.
+  prefork: false
+
+limits:
+  max_html_bytes: 1048576 # 1 MB
+  max_pdf_bytes: 5242880  # 5 MB
+
+logger:
+  file: "logs/html2pdf.log"
+  level: "info"
+  max_size_mb: 1      # Max logfile size in MB
+  max_backups: 5      # Number of old logfiles to keep
+  max_age_days: 7     # Days to keep logfiles
+  compress: true      # Gzip old logfiles
+
+cache:
+  pdf_cache_enabled: true
+  pdf_cache_ttl: 5m      # Cache TTL for generated PDFs (short-lived cache; e.g. 2m, 5m, 10m)
+  redis_host: "redis:6379"
+  redis_rate_db: 0
+  redis_pdf_db: 1
+
+rate_limiter:
+  interval: 1h
+  enable_user_limiter: true
+  user_limit: 20
+
+auth:
+  # Postgres connection for API tokens (tokens table)
+  postgres:
+    host: "postgres"
+    port: 5432
+    database: "html2pdf"
+    user: "html2pdf"
+    password: "html2pdf"
+    sslmode: "disable"
+
+pdf:
+  default_paper: "A4"
+  timeout_secs: 30
+  chrome_no_sandbox: true
+  # Preloaded (pooled) Chrome tabs. 0 disables pooling and starts Chrome per request.
+  chrome_pool_size: 4
+  user_data_dir: "/tmp/html2pdf-chrome-profile"
+  paper_sizes:
+    A4:
+      width: 8.27
+      height: 11.69
+    LETTER:
+      width: 8.5
+      height: 11.0
+    LEGAL:
+      width: 8.5
+      height: 14.0
+    A5:
+      width: 5.83
+      height: 8.27
+    A3:
+      width: 11.69
+      height: 16.54
+    TABLOID:
+      width: 11.0
+      height: 17.0
