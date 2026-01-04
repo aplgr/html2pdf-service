@@ -19,8 +19,9 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/redis/go-redis/v9"
 
-	"html2pdf/internal/chrome"
-	u "html2pdf/internal/utils"
+	"html2pdf/internal/config"
+	"html2pdf/internal/infra/chrome"
+	"html2pdf/internal/infra/logging"
 )
 
 // PDFRequestParams holds validated input parameters.
@@ -31,12 +32,12 @@ type PDFRequestParams struct {
 	Orientation string
 	Margin      float64
 	Filename    string
-	Paper       u.PaperSize
+	Paper       config.PaperSize
 }
 
 // PDFService bundles configuration and dependencies for PDF rendering.
 type PDFService struct {
-	Config *u.Config
+	Config *config.Config
 	Redis  *redis.Client
 
 	poolMu  sync.Mutex
@@ -45,19 +46,19 @@ type PDFService struct {
 }
 
 // HandlePDFConversion returns a Fiber handler for PDF conversion requests.
-func HandlePDFConversion(cfg u.Config, rdb *redis.Client) fiber.Handler {
+func HandlePDFConversion(cfg config.Config, rdb *redis.Client) fiber.Handler {
 	svc := NewPDFService(cfg, rdb)
 	return svc.HandleConversion
 }
 
 // HandlePDFURL returns a Fiber handler for URL-based PDF conversion requests.
-func HandlePDFURL(cfg u.Config, rdb *redis.Client) fiber.Handler {
+func HandlePDFURL(cfg config.Config, rdb *redis.Client) fiber.Handler {
 	svc := NewPDFService(cfg, rdb)
 	return svc.HandleURLConversion
 }
 
 // NewPDFService creates a new PDFService instance.
-func NewPDFService(cfg u.Config, rdb *redis.Client) *PDFService {
+func NewPDFService(cfg config.Config, rdb *redis.Client) *PDFService {
 	return &PDFService{
 		Config: &cfg, // convert value to pointer
 		Redis:  rdb,
@@ -120,14 +121,14 @@ func (svc *PDFService) processPDFGeneration(c *fiber.Ctx, params *PDFRequestPara
 			// - Chrome pool init warmup timeout
 			// - Pool acquire timeout (no free tab)
 			// - Actual render timeout
-			u.Error("PDF generation timeout", "timeout_secs", svc.Config.PDF.TimeoutSecs, "error", err.Error())
+			logging.Error("PDF generation timeout", "timeout_secs", svc.Config.PDF.TimeoutSecs, "error", err.Error())
 			return fiber.NewError(fiber.StatusRequestTimeout, "PDF rendering took too long")
 		}
 		if chrome.IsSessionInterrupted(err) {
-			u.Error("Chrome session interrupted", "error", err.Error())
+			logging.Error("Chrome session interrupted", "error", err.Error())
 			return fiber.NewError(fiber.StatusServiceUnavailable, "Chrome session interrupted")
 		}
-		u.Error("PDF generation failed", "error", err.Error())
+		logging.Error("PDF generation failed", "error", err.Error())
 		return fiber.NewError(fiber.StatusInternalServerError, "PDF generation failed: "+err.Error())
 	}
 
@@ -141,7 +142,7 @@ func (svc *PDFService) processPDFGeneration(c *fiber.Ctx, params *PDFRequestPara
 	}
 
 	requestID := c.Get("X-Request-ID")
-	u.Info("PDF generated", "filename", params.Filename, "request_id", requestID)
+	logging.Info("PDF generated", "filename", params.Filename, "request_id", requestID)
 
 	c.Set("Content-Type", "application/pdf")
 	c.Set("Content-Disposition", "attachment; filename="+params.Filename)
@@ -179,7 +180,7 @@ func (svc *PDFService) renderPDF(params *PDFRequestParams) ([]byte, error) {
 
 	pdfBuf, renderErr := runOnce()
 	if renderErr != nil && chrome.IsSessionInterrupted(renderErr) {
-		u.Warn("Chrome session interrupted; restarting pool and retrying once", "error", renderErr)
+		logging.Warn("Chrome session interrupted; restarting pool and retrying once", "error", renderErr)
 		_ = pool.Restart()
 		return runOnce()
 	}
@@ -188,7 +189,7 @@ func (svc *PDFService) renderPDF(params *PDFRequestParams) ([]byte, error) {
 }
 
 // validateAndExtractPDFParams validates and parses input parameters from the HTTP request.
-func validateAndExtractPDFParams(c *fiber.Ctx, cfg u.Config) (*PDFRequestParams, error) {
+func validateAndExtractPDFParams(c *fiber.Ctx, cfg config.Config) (*PDFRequestParams, error) {
 	html := c.FormValue("html")
 
 	if len(html) < 10 {
@@ -255,7 +256,7 @@ func validateAndExtractPDFParams(c *fiber.Ctx, cfg u.Config) (*PDFRequestParams,
 }
 
 // validateAndExtractURLParams validates query parameters and fetches HTML from the provided URL.
-func validateAndExtractURLParams(c *fiber.Ctx, cfg u.Config) (*PDFRequestParams, error) {
+func validateAndExtractURLParams(c *fiber.Ctx, cfg config.Config) (*PDFRequestParams, error) {
 	urlStr := c.Query("url")
 	if urlStr == "" {
 		return nil, fiber.NewError(fiber.StatusBadRequest, "Invalid URL: missing")
@@ -345,11 +346,11 @@ func getCachedPDF(c *fiber.Ctx, rdb *redis.Client, key, filename string) ([]byte
 		return nil, nil
 	}
 	if err != nil {
-		u.Warn("Redis read failed", "error", err)
+		logging.Warn("Redis read failed", "error", err)
 		return nil, err
 	}
 
-	u.Info("PDF cache hit", "key", key)
+	logging.Info("PDF cache hit", "key", key)
 	c.Set("Content-Type", "application/pdf")
 	c.Set("Content-Disposition", "attachment; filename="+filename)
 	return cached, nil
@@ -365,12 +366,12 @@ func setCachedPDF(c *fiber.Ctx, rdb *redis.Client, key string, data []byte, ttl 
 	}
 
 	if err := rdb.Set(ctxRedis, key, data, ttl).Err(); err != nil {
-		u.Warn("Redis write failed", "error", err)
+		logging.Warn("Redis write failed", "error", err)
 	}
 }
 
 // renderPDFWithChrome uses headless Chrome via chromedp to render the HTML to PDF.
-func renderPDFWithChrome(html, url string, paper u.PaperSize, margin float64, cfg u.Config) ([]byte, error) {
+func renderPDFWithChrome(html, url string, paper config.PaperSize, margin float64, cfg config.Config) ([]byte, error) {
 
 	tmpDir, err := os.MkdirTemp("", "chromedata-*")
 	if err != nil {
@@ -411,7 +412,7 @@ func renderPDFWithChrome(html, url string, paper u.PaperSize, margin float64, cf
 }
 
 // renderPDFInExistingTab renders either raw HTML or a remote URL into PDF within a pre-existing chromedp tab.
-func renderPDFInExistingTab(ctx context.Context, html, url string, paper u.PaperSize, margin float64) ([]byte, error) {
+func renderPDFInExistingTab(ctx context.Context, html, url string, paper config.PaperSize, margin float64) ([]byte, error) {
 	var pdfBuf []byte
 	var actions []chromedp.Action
 

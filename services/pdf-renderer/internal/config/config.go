@@ -1,4 +1,4 @@
-package utils
+package config
 
 import (
 	"os"
@@ -60,18 +60,18 @@ var (
 	AppConfig Config       // Global application configuration
 )
 
-// LoadConfig loads the configuration. You can override the path via CONFIG_PATH.
-func LoadConfig() Config {
+// Load loads the configuration. You can override the path via CONFIG_PATH.
+func Load() Config {
 	path := os.Getenv("CONFIG_PATH")
 	if path == "" {
 		path = "config/html2pdf.yaml"
 	}
-	return LoadConfigFrom(path)
+	return LoadFrom(path)
 }
 
-// LoadConfigFrom loads the configuration from the specified YAML file path.
+// LoadFrom loads the configuration from the specified YAML file path.
 // Panics if the file cannot be read or the format is invalid.
-func LoadConfigFrom(path string) Config {
+func LoadFrom(path string) Config {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		panic("Error reading " + path + ": " + err.Error())

@@ -13,7 +13,8 @@ import (
 
 	"github.com/chromedp/chromedp"
 
-	u "html2pdf/internal/utils"
+	"html2pdf/internal/config"
+	"html2pdf/internal/infra/logging"
 )
 
 // Tab represents a single-use Chrome tab (chromedp context) created from a shared browser instance.
@@ -27,7 +28,7 @@ type Tab struct {
 // each Acquire creates a fresh tab context and Release closes it. Concurrency is controlled
 // by a semaphore with size = chrome_pool_size.
 type Pool struct {
-	cfg u.Config
+	cfg config.Config
 
 	allocCtx      context.Context
 	allocCancel   context.CancelFunc
@@ -57,7 +58,7 @@ type Stats struct {
 	LastRestart  string `json:"last_restart,omitempty"`
 }
 
-func NewPool(cfg u.Config) (*Pool, error) {
+func NewPool(cfg config.Config) (*Pool, error) {
 	if cfg.PDF.ChromePoolSize <= 0 {
 		return nil, fmt.Errorf("chrome pool disabled (chrome_pool_size <= 0)")
 	}
@@ -132,7 +133,7 @@ func NewPool(cfg u.Config) (*Pool, error) {
 	_ = chromedp.Run(warmupCtx, chromedp.Navigate("about:blank"))
 	cancel()
 
-	u.Info("Chrome pool initialized", "tabs", cfg.PDF.ChromePoolSize, "profile_dir", profileDir)
+	logging.Info("Chrome pool initialized", "tabs", cfg.PDF.ChromePoolSize, "profile_dir", profileDir)
 	return p, nil
 }
 
@@ -275,7 +276,7 @@ func (p *Pool) Restart() error {
 		_ = os.RemoveAll(oldProfile)
 	}
 
-	u.Warn("Chrome pool restarted", "profile_dir", profileDir)
+	logging.Warn("Chrome pool restarted", "profile_dir", profileDir)
 	return nil
 }
 
@@ -300,7 +301,7 @@ func (p *Pool) Close() {
 	}
 }
 
-func createProfileDir(cfg u.Config) (string, error) {
+func createProfileDir(cfg config.Config) (string, error) {
 	base := cfg.PDF.UserDataDir
 	if base == "" {
 		base = filepath.Join(os.TempDir(), "html2pdf-chrome-profile")

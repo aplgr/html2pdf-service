@@ -1,7 +1,8 @@
-package app
+package middleware
 
 import (
-	u "html2pdf/internal/utils"
+	"html2pdf/internal/config"
+	"html2pdf/internal/infra/logging"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -14,7 +15,7 @@ import (
 //
 // Auth and rate limiting are intentionally NOT handled here anymore.
 // They are enforced at the gateway (Envoy) via an external auth service.
-func RegisterMiddleware(app *fiber.App, cfg u.Config) {
+func Register(app *fiber.App, cfg config.Config) {
 	_ = cfg // kept for forward-compat; middleware might use config later.
 
 	app.Use(cors.New())
@@ -32,7 +33,7 @@ func RegisterMiddleware(app *fiber.App, cfg u.Config) {
 		if requestID == "" {
 			requestID = c.GetRespHeader("X-Request-ID")
 		}
-		u.Info("Incoming request", "method", c.Method(), "path", c.Path(), "request_id", requestID)
+		logging.Info("Incoming request", "method", c.Method(), "path", c.Path(), "request_id", requestID)
 		return c.Next()
 	})
 }

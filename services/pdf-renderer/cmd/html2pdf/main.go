@@ -10,14 +10,15 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/redis/go-redis/v9"
 
-	"html2pdf/internal/app"
-	u "html2pdf/internal/utils"
+	"html2pdf/internal/config"
+	"html2pdf/internal/http/server"
+	"html2pdf/internal/infra/logging"
 )
 
 var RedisClient *redis.Client
 
 func main() {
-	cfg := u.LoadConfig()
+	cfg := config.Load()
 
 	// Allow common container env var to override chrome_path.
 	if cfg.PDF.ChromePath == "" {
@@ -26,7 +27,7 @@ func main() {
 		}
 	}
 
-	u.InitLogger(
+	logging.InitLogger(
 		cfg.Logger.File,
 		cfg.Logger.MaxSizeMB,
 		cfg.Logger.MaxBackups,
@@ -34,7 +35,7 @@ func main() {
 		cfg.Logger.Compress,
 		cfg.Logger.Level,
 	)
-	u.SetLogLevel(cfg.Logger.Level)
+	logging.SetLogLevel(cfg.Logger.Level)
 
 	rdb := redis.NewClient(&redis.Options{
 		Addr: cfg.Cache.RedisHost,
@@ -42,7 +43,7 @@ func main() {
 	})
 	RedisClient = rdb // optional, kept for potential global usage
 
-	app := app.SetupApp(cfg, rdb)
+	app := server.New(server.Deps{Config: cfg, Redis: rdb})
 
 	idleConnsClosed := make(chan struct{})
 	startServer(app, cfg, idleConnsClosed)
@@ -50,10 +51,10 @@ func main() {
 }
 
 // startServer starts the Fiber app and listens for shutdown signals.
-func startServer(app *fiber.App, cfg u.Config, idleConnsClosed chan struct{}) {
+func startServer(app *fiber.App, cfg config.Config, idleConnsClosed chan struct{}) {
 	go func() {
 		if err := app.Listen(cfg.Server.Host + cfg.Server.Port); err != nil {
-			u.Error("Server error", "error", err)
+			logging.Error("Server error", "error", err)
 		}
 	}()
 
@@ -62,16 +63,16 @@ func startServer(app *fiber.App, cfg u.Config, idleConnsClosed chan struct{}) {
 	signal.Notify(sigint, syscall.SIGINT, syscall.SIGTERM)
 	<-sigint
 
-	u.Warn("Shutdown signal received, closing server...")
+	logging.Warn("Shutdown signal received, closing server...")
 
 	// Graceful shutdown with timeout.
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	if err := app.ShutdownWithContext(ctx); err != nil {
-		u.Error("Server forced to shutdown", "error", err)
+		logging.Error("Server forced to shutdown", "error", err)
 	}
 
 	close(idleConnsClosed)
-	u.Info("Server stopped cleanly")
+	logging.Info("Server stopped cleanly")
 }

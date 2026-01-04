@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	u "html2pdf/internal/utils"
+	"html2pdf/internal/config"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -106,7 +106,7 @@ func Test_setAndGetCachedPDF(t *testing.T) {
 }
 
 func Test_validateAndExtractPDFParams_valid(t *testing.T) {
-	cfg := u.Config{
+	cfg := config.Config{
 		Limits: struct {
 			MaxHTMLBytes int `yaml:"max_html_bytes"`
 			MaxPDFBytes  int `yaml:"max_pdf_bytes"`
@@ -115,16 +115,16 @@ func Test_validateAndExtractPDFParams_valid(t *testing.T) {
 			MaxPDFBytes:  1024 * 1024,
 		},
 		PDF: struct {
-			DefaultPaper    string                 `yaml:"default_paper"`
-			PaperSizes      map[string]u.PaperSize `yaml:"paper_sizes"`
-			TimeoutSecs     int                    `yaml:"timeout_secs"`
-			ChromePath      string                 `yaml:"chrome_path"`
-			ChromeNoSandbox bool                   `yaml:"chrome_no_sandbox"`
-			ChromePoolSize  int                    `yaml:"chrome_pool_size"`
-			UserDataDir     string                 `yaml:"user_data_dir"`
+			DefaultPaper    string                      `yaml:"default_paper"`
+			PaperSizes      map[string]config.PaperSize `yaml:"paper_sizes"`
+			TimeoutSecs     int                         `yaml:"timeout_secs"`
+			ChromePath      string                      `yaml:"chrome_path"`
+			ChromeNoSandbox bool                        `yaml:"chrome_no_sandbox"`
+			ChromePoolSize  int                         `yaml:"chrome_pool_size"`
+			UserDataDir     string                      `yaml:"user_data_dir"`
 		}{
 			DefaultPaper: "A4",
-			PaperSizes: map[string]u.PaperSize{
+			PaperSizes: map[string]config.PaperSize{
 				"A4": {Width: 8.27, Height: 11.69},
 			},
 		},
@@ -153,7 +153,7 @@ func Test_validateAndExtractPDFParams_valid(t *testing.T) {
 }
 
 func Test_validateAndExtractPDFParams_invalidMargin(t *testing.T) {
-	cfg := u.Config{
+	cfg := config.Config{
 		Limits: struct {
 			MaxHTMLBytes int `yaml:"max_html_bytes"`
 			MaxPDFBytes  int `yaml:"max_pdf_bytes"`
@@ -162,16 +162,16 @@ func Test_validateAndExtractPDFParams_invalidMargin(t *testing.T) {
 			MaxPDFBytes:  1024 * 1024,
 		},
 		PDF: struct {
-			DefaultPaper    string                 `yaml:"default_paper"`
-			PaperSizes      map[string]u.PaperSize `yaml:"paper_sizes"`
-			TimeoutSecs     int                    `yaml:"timeout_secs"`
-			ChromePath      string                 `yaml:"chrome_path"`
-			ChromeNoSandbox bool                   `yaml:"chrome_no_sandbox"`
-			ChromePoolSize  int                    `yaml:"chrome_pool_size"`
-			UserDataDir     string                 `yaml:"user_data_dir"`
+			DefaultPaper    string                      `yaml:"default_paper"`
+			PaperSizes      map[string]config.PaperSize `yaml:"paper_sizes"`
+			TimeoutSecs     int                         `yaml:"timeout_secs"`
+			ChromePath      string                      `yaml:"chrome_path"`
+			ChromeNoSandbox bool                        `yaml:"chrome_no_sandbox"`
+			ChromePoolSize  int                         `yaml:"chrome_pool_size"`
+			UserDataDir     string                      `yaml:"user_data_dir"`
 		}{
 			DefaultPaper: "A4",
-			PaperSizes: map[string]u.PaperSize{
+			PaperSizes: map[string]config.PaperSize{
 				"A4": {Width: 8.27, Height: 11.69},
 			},
 		},
@@ -197,9 +197,9 @@ func Test_validateAndExtractPDFParams_invalidMargin(t *testing.T) {
 }
 
 func Test_NewPDFService_Initialization(t *testing.T) {
-	cfg := u.Config{}
+	cfg := config.Config{}
 	cfg.PDF.DefaultPaper = "A4"
-	cfg.PDF.PaperSizes = map[string]u.PaperSize{
+	cfg.PDF.PaperSizes = map[string]config.PaperSize{
 		"A4": {Width: 8.27, Height: 11.69},
 	}
 	cfg.PDF.TimeoutSecs = 10
@@ -220,7 +220,7 @@ func Test_NewPDFService_Initialization(t *testing.T) {
 }
 
 func TestPDFService_getChromePool_DisabledReturnsNil(t *testing.T) {
-	var cfg u.Config
+	var cfg config.Config
 	cfg.PDF.ChromePoolSize = 0
 
 	svc := NewPDFService(cfg, nil)
@@ -248,7 +248,7 @@ func Test_validateAndExtractURLParams_valid(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	cfg := u.Config{
+	cfg := config.Config{
 		Limits: struct {
 			MaxHTMLBytes int `yaml:"max_html_bytes"`
 			MaxPDFBytes  int `yaml:"max_pdf_bytes"`
@@ -257,16 +257,16 @@ func Test_validateAndExtractURLParams_valid(t *testing.T) {
 			MaxPDFBytes:  1024 * 1024,
 		},
 		PDF: struct {
-			DefaultPaper    string                 `yaml:"default_paper"`
-			PaperSizes      map[string]u.PaperSize `yaml:"paper_sizes"`
-			TimeoutSecs     int                    `yaml:"timeout_secs"`
-			ChromePath      string                 `yaml:"chrome_path"`
-			ChromeNoSandbox bool                   `yaml:"chrome_no_sandbox"`
-			ChromePoolSize  int                    `yaml:"chrome_pool_size"`
-			UserDataDir     string                 `yaml:"user_data_dir"`
+			DefaultPaper    string                      `yaml:"default_paper"`
+			PaperSizes      map[string]config.PaperSize `yaml:"paper_sizes"`
+			TimeoutSecs     int                         `yaml:"timeout_secs"`
+			ChromePath      string                      `yaml:"chrome_path"`
+			ChromeNoSandbox bool                        `yaml:"chrome_no_sandbox"`
+			ChromePoolSize  int                         `yaml:"chrome_pool_size"`
+			UserDataDir     string                      `yaml:"user_data_dir"`
 		}{
 			DefaultPaper: "A4",
-			PaperSizes: map[string]u.PaperSize{
+			PaperSizes: map[string]config.PaperSize{
 				"A4": {Width: 8.27, Height: 11.69},
 			},
 			TimeoutSecs: 5,
@@ -293,9 +293,9 @@ func Test_validateAndExtractURLParams_valid(t *testing.T) {
 }
 
 func Test_validateAndExtractURLParams_invalidURL(t *testing.T) {
-	cfg := u.Config{}
+	cfg := config.Config{}
 	cfg.PDF.DefaultPaper = "A4"
-	cfg.PDF.PaperSizes = map[string]u.PaperSize{
+	cfg.PDF.PaperSizes = map[string]config.PaperSize{
 		"A4": {Width: 8.27, Height: 11.69},
 	}
 

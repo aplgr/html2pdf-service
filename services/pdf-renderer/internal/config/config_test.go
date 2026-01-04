@@ -1,4 +1,4 @@
-package utils
+package config
 
 import (
 	"os"
@@ -80,7 +80,7 @@ pdf:
 
 	path := writeTempConfig(t, configYAML)
 
-	cfg := LoadConfigFrom(path)
+	cfg := LoadFrom(path)
 
 	assert.Equal(t, "127.0.0.1", cfg.Server.Host)
 	assert.Equal(t, ":8080", cfg.Server.Port)
@@ -126,7 +126,7 @@ func TestGetConfig_ReturnsLoadedConfig(t *testing.T) {
 
 func TestLoadConfigFrom_FileNotFound(t *testing.T) {
 	assert.Panics(t, func() {
-		LoadConfigFrom("non_existent.yaml")
+		LoadFrom("non_existent.yaml")
 	})
 }
 func TestLoadConfigFrom_InvalidYAML(t *testing.T) {
@@ -137,7 +137,7 @@ server:
 
 	tmp := writeTempConfig(t, invalidYAML)
 	assert.Panics(t, func() {
-		LoadConfigFrom(tmp)
+		LoadFrom(tmp)
 	})
 }
 
@@ -149,7 +149,7 @@ server:
 ` // Rest (logger, pdf, etc.) is missing
 
 	tmp := writeTempConfig(t, yaml)
-	cfg := LoadConfigFrom(tmp)
+	cfg := LoadFrom(tmp)
 
 	assert.Equal(t, "localhost", cfg.Server.Host)
 	assert.Equal(t, "3000", cfg.Server.Port)
@@ -195,11 +195,11 @@ func TestLoadConfig_PrefersConfigPathEnvVarWhenPresent(t *testing.T) {
 
 	// 1) No env var -> default path
 	os.Unsetenv("CONFIG_PATH")
-	cfg := LoadConfig()
+	cfg := Load()
 	assert.Equal(t, "default:6379", cfg.Cache.RedisHost)
 
 	// 2) Env var set -> env path wins
 	assert.NoError(t, os.Setenv("CONFIG_PATH", envPath))
-	cfg = LoadConfig()
+	cfg = Load()
 	assert.Equal(t, "env:6379", cfg.Cache.RedisHost)
 }
