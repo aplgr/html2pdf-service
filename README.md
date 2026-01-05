@@ -16,8 +16,16 @@ It ships with a small local stack (Envoy + Postgres + Redis + docs UI) so you ca
 ## Quick start
 
 ```bash
-docker compose -f deploy/docker-compose.yml up --build
+make start
 ```
+
+Stop the stack:
+
+```bash
+make stop
+```
+
+(If you prefer the raw command: `docker compose -f deploy/docker-compose.yml up -d --build`.)
 
 - Live demo (public, **demo only**): `https://html2pdf.aplgr.com`
 

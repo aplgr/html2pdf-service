@@ -369,17 +369,28 @@
                 <div class="mb-3" x-show="mode==='post'" x-cloak>
                   <div class="d-flex align-items-center justify-content-between gap-2">
                     <label class="form-label fw-semibold mb-0">HTML</label>
-                    <div class="d-flex gap-2">
-                      <button class="btn btn-sm btn-outline-secondary" type="button"
-                              @click="loadExample('hello')">Hello</button>
-                      <button class="btn btn-sm btn-outline-secondary" type="button"
-                              @click="loadExample('invoice')">Invoice</button>
-                      <button class="btn btn-sm btn-outline-secondary" type="button"
-                              @click="loadExample('long')">Long</button>
+                    <div class="d-flex gap-2 align-items-center">
+                      <select class="form-select form-select-sm" style="max-width: 280px;" x-model="selectedExampleId"
+                              @change="loadSelectedExample()" :disabled="exampleLoading">
+                        <option value="">Load example…</option>
+                        <template x-for="ex in examples" :key="ex.id">
+                          <option :value="ex.id" x-text="ex.title"></option>
+                        </template>
+                      </select>
+                      <button class="btn btn-sm btn-outline-secondary" type="button" title="Reload examples"
+                              @click="fetchExamples" :disabled="exampleLoading">
+                        <i class="bi bi-arrow-clockwise"></i>
+                      </button>
                     </div>
                   </div>
                   <textarea class="form-control font-monospace" rows="11" x-model="html"></textarea>
-                  <div class="form-text">Used as <code>POST /api/v1/pdf</code> with multipart form-data.</div>
+                  <div class="form-text">
+                    Used as <code>POST /api/v1/pdf</code> with multipart form-data.
+                    <span class="ms-1" x-show="selectedExample" x-cloak>
+                      Loaded: <code x-text="selectedExample && selectedExample.path"></code>
+                    </span>
+                  </div>
+                  <div class="form-text text-danger" x-show="examplesError" x-text="examplesError" x-cloak></div>
                 </div>
                 <div class="row g-3">
                   <div class="col-sm-6">
@@ -734,6 +745,12 @@ cd html2pdf-service</code></pre>
       return {
         mode: 'post',
 
+        // Examples (served from /examples via nginx)
+        examples: [],
+        selectedExampleId: '',
+        examplesError: '',
+        exampleLoading: false,
+
         // POST
         html: `<!doctype html>
 <html>
@@ -759,6 +776,64 @@ cd html2pdf-service</code></pre>
 
         init() {
           // no user-editable base URL: this page calls the same origin.
+          this.fetchExamples();
+        },
+
+        get selectedExample() {
+          return this.examples.find(e => e.id === this.selectedExampleId) || null;
+        },
+
+        async fetchExamples() {
+          this.examplesError = '';
+          this.exampleLoading = true;
+          try {
+            const res = await fetch('/examples/index.json', { cache: 'no-store' });
+            if (!res.ok) throw new Error(`Failed to load examples index: HTTP ${res.status}`);
+            const list = await res.json();
+            if (!Array.isArray(list)) throw new Error('Invalid examples index (expected JSON array)');
+
+            // Keep stable ordering (title, then id)
+            this.examples = list
+              .filter(x => x && typeof x === 'object' && x.id && x.title && x.path)
+              .sort((a, b) => String(a.title).localeCompare(String(b.title)) || String(a.id).localeCompare(String(b.id)));
+          } catch (e) {
+            this.examples = [];
+            this.examplesError = String(e && e.message ? e.message : e);
+          } finally {
+            this.exampleLoading = false;
+          }
+        },
+
+        applyExampleDefaults(ex) {
+          const d = ex && ex.defaultOptions ? ex.defaultOptions : null;
+          if (!d) return;
+          if (d.format) this.format = String(d.format);
+          if (d.orientation) this.orientation = String(d.orientation);
+          if (d.margin != null && d.margin !== '') {
+            const n = Number(d.margin);
+            if (!Number.isNaN(n)) this.margin = n;
+          }
+          if (d.filename) this.filename = String(d.filename);
+        },
+
+        async loadSelectedExample() {
+          const ex = this.selectedExample;
+          if (!ex) return;
+
+          this.setMode('post');
+          this.examplesError = '';
+          this.exampleLoading = true;
+
+          try {
+            const res = await fetch(ex.path, { cache: 'no-store' });
+            if (!res.ok) throw new Error(`Failed to load example: HTTP ${res.status}`);
+            this.html = await res.text();
+            this.applyExampleDefaults(ex);
+          } catch (e) {
+            this.examplesError = String(e && e.message ? e.message : e);
+          } finally {
+            this.exampleLoading = false;
+          }
         },
 
         setMode(m) {
@@ -811,82 +886,7 @@ cd html2pdf-service</code></pre>
           window.open(this.result.blobUrl, '_blank', 'noopener,noreferrer');
         },
 
-        loadExample(which) {
-          if (which === 'hello') {
-            this.html = `<!doctype html>
-<html>
-<head><meta charset="utf-8"><title>Hello</title></head>
-<body style="font-family: Arial, sans-serif; padding: 24px;">
-  <h1>Hello PDF</h1>
-  <p>This PDF was generated by <strong>html2pdf</strong>.</p>
-  <hr>
-  <p style="color:#334155;">Try landscape + bigger margins.</p>
-</body>
-</html>`;
-            return;
-          }
-          if (which === 'invoice') {
-            this.html = `<!doctype html>
-<html>
-<head>
-<meta charset="utf-8">
-<title>Invoice</title>
-</head>
-<body style="font-family: Arial, sans-serif; padding: 24px;">
-<div style="display:flex; justify-content:space-between; align-items:flex-start;">
-<div>
-<h2 style="margin:0;">Invoice</h2>
-<div style="color:#64748b;">INV-2025-001</div>
-</div>
-<div style="text-align:right;">
-<div><strong>ACME Inc.</strong></div>
-<div style="color:#64748b;">Asuncion, PY</div>
-</div>
-</div>
-<hr>
-<table style="width:100%; border-collapse:collapse;">
-<thead>
-<tr style="text-align:left; border-bottom:1px solid #e2e8f0;">
-<th style="padding:8px;">Item</th>
-<th style="padding:8px;">Qty</th>
-<th style="padding:8px;">Price</th>
-</tr>
-</thead>
-<tbody>
-<tr style="border-bottom:1px solid #f1f5f9;">
-<td style="padding:8px;">HTML to PDF conversion</td>
-<td style="padding:8px;">1</td>
-<td style="padding:8px;">$49.00</td>
-</tr>
-<tr style="border-bottom:1px solid #f1f5f9;">
-<td style="padding:8px;">Support</td>
-<td style="padding:8px;">1</td>
-<td style="padding:8px;">$0.00</td>
-</tr>
-</tbody>
-</table>
-<div style="display:flex; justify-content:flex-end; margin-top:16px;">
-<div style="min-width:220px;">
-<div style="display:flex; justify-content:space-between;"><span>Subtotal</span><span>$49.00</span></div>
-<div style="display:flex; justify-content:space-between;"><span>Tax</span><span>$0.00</span></div>
-<div style="display:flex; justify-content:space-between; font-weight:700; border-top:1px solid #e2e8f0; padding-top:8px; margin-top:8px;"><span>Total</span><span>$49.00</span></div>
-</div>
-</div>
-<p style="color:#64748b; margin-top:24px;">Thanks for your business.</p>
-</body>
-</html>`;
-            return;
-          }
-          this.html = `<!doctype html>
-<html>
-<head><meta charset="utf-8"><title>Long</title></head>
-<body style="font-family: Arial, sans-serif; padding: 24px; line-height:1.55;">
-<h1>A longer page</h1>
-<p>This example is just long enough to create multiple pages when printed to PDF.</p>
-` +
-            Array.from({ length: 40 }).map((_, i) => `<p><strong>Paragraph ${i + 1}.</strong> Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>`).join('') +
-            `</body></html>`;
-        },
+        // Examples are now loaded dynamically from /examples/index.json.
 
         async generate() {
           this.clearResult();

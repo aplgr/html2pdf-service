@@ -1,0 +1,17 @@
+[
+  {"id":"batch_export","title":"Batch Export Demo","path":"/examples/batch_export.html"}
+  ,{"id":"certificate","title":"Certificate of Completion","path":"/examples/certificate.html"}
+  ,{"id":"dynamic_form","title":"Dynamic Form Demo","path":"/examples/dynamic_form.html"}
+  ,{"id":"event_ticket","title":"Event Ticket","path":"/examples/event_ticket.html"}
+  ,{"id":"invoice","title":"Invoice Example","path":"/examples/invoice.html" ,"defaultOptions":{"format":"A4","orientation":"portrait","margin":"0.4","filename":"invoice.pdf"}}
+  ,{"id":"meeting_minutes","title":"Meeting Minutes","path":"/examples/meeting_minutes.html"}
+  ,{"id":"newsletter","title":"Weekly Newsletter","path":"/examples/newsletter.html"}
+  ,{"id":"product_catalog","title":"Product Catalog","path":"/examples/product_catalog.html"}
+  ,{"id":"product_sheet","title":"Product Sheet","path":"/examples/product_sheet.html" ,"description":"Detailed safety and handling instructions for the UltraPower 10000X Pro high performance battery pack."}
+  ,{"id":"receipt","title":"Receipt Example","path":"/examples/receipt.html"}
+  ,{"id":"report","title":"Report Snapshot","path":"/examples/report.html"}
+  ,{"id":"resume","title":"Resume","path":"/examples/resume.html"}
+  ,{"id":"shipping_label","title":"Shipping Label","path":"/examples/shipping_label.html"}
+  ,{"id":"terms","title":"Terms and Conditions","path":"/examples/terms.html"}
+  ,{"id":"web_article","title":"Web Article","path":"/examples/web_article.html"}
+]

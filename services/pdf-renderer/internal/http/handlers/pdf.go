@@ -436,7 +436,9 @@ func renderPDFInExistingTab(ctx context.Context, html, url string, paper config.
 	}
 
 	actions = append(actions,
-		chromedp.Sleep(200*time.Millisecond),
+		chromedp.ActionFunc(func(ctx context.Context) error {
+			return waitForRenderReady(ctx, 15*time.Second)
+		}),
 		chromedp.ActionFunc(func(ctx context.Context) error {
 			var err error
 			pdfBuf, _, err = page.PrintToPDF().
@@ -456,6 +458,66 @@ func renderPDFInExistingTab(ctx context.Context, html, url string, paper config.
 		return nil, err
 	}
 	return pdfBuf, nil
+}
+
+// waitForRenderReady waits until the page finished loading and critical assets are available.
+// This avoids rendering PDFs before CDN assets (CSS/fonts/images) are loaded.
+func waitForRenderReady(ctx context.Context, timeout time.Duration) error {
+	deadline := time.Now().Add(timeout)
+
+	// 1) Document readyState
+	for time.Now().Before(deadline) {
+		var state string
+		if err := chromedp.Evaluate(`document.readyState`, &state).Do(ctx); err != nil {
+			return err
+		}
+		if state == "complete" {
+			break
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+
+	// 2) Optional explicit hook: allow examples to signal "I'm ready"
+	// If the flag is undefined, we don't block on it.
+	for time.Now().Before(deadline) {
+		var ok bool
+		expr := `(typeof window.__HTML2PDF_READY__ === "undefined") || (window.__HTML2PDF_READY__ === true)`
+		if err := chromedp.Evaluate(expr, &ok).Do(ctx); err != nil {
+			return err
+		}
+		if ok {
+			break
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+
+	// 3) Fonts loaded (if Font Loading API exists)
+	for time.Now().Before(deadline) {
+		var loaded bool
+		expr := `(document.fonts && document.fonts.status) ? (document.fonts.status === "loaded") : true`
+		if err := chromedp.Evaluate(expr, &loaded).Do(ctx); err != nil {
+			return err
+		}
+		if loaded {
+			break
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+
+	// 4) Images loaded (complete==true means loaded or failed; we mainly avoid "still downloading")
+	for time.Now().Before(deadline) {
+		var done bool
+		expr := `Array.from(document.images || []).every(img => img.complete)`
+		if err := chromedp.Evaluate(expr, &done).Do(ctx); err != nil {
+			return err
+		}
+		if done {
+			break
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+
+	return nil
 }
 
 // HandleChromeStats exposes basic observability for the Chrome pool (capacity / idle / in_use).

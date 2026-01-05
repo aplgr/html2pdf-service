@@ -12,10 +12,12 @@ FROM alpine:3.20
 
 RUN apk add --no-cache \
     chromium \
+    ca-certificates \
     ttf-dejavu \
     font-noto \
     font-noto-emoji \
-    dumb-init
+    dumb-init \
+    && update-ca-certificates
 
 ENV CHROME_BIN=/usr/bin/chromium-browser
 ENV CHROME_NO_SANDBOX=true

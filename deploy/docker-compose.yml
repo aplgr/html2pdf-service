@@ -54,12 +54,11 @@ services:
     - ../logs:/app/logs
     - ../services/pdf-renderer/config/html2pdf.yaml:/app/config/html2pdf.yaml:ro
   docs:
-    image: nginxinc/nginx-unprivileged:alpine
+    build:
+      context: ..
+      dockerfile: frontend/nginx/Dockerfile
     expose:
     - '8080'
-    volumes:
-    - ../frontend/nginx/docs:/usr/share/nginx/html:ro
-    - ../frontend/nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
   envoy:
     image: envoyproxy/envoy:v1.30-latest
     depends_on:
