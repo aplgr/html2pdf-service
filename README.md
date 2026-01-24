@@ -146,17 +146,6 @@ If you expose this service publicly (or run it in production), harden it first:
 - Redis is shared between auth + renderer; keep DBs/prefixes separated to avoid collisions.
 - If you run without Docker, you will need compatible Postgres/Redis endpoints and a local Chrome/Chromium.
 
-## Roadmap
-
-Ideas that would meaningfully improve this service:
-
-- enable envoy to handle requests via SSL (port 443) 
-- improve quality and coverage of examples (more real-world HTML, auth scenarios etc.)
-- add unit + integration tests (rate limiting, token reload, cache behavior, chrome lifecycle, Envoy + ext_authz + auth-service + renderer)
-- move observability endpoints under the service path and protect them separately (e.g. dedicated API key)
-- performance + security hardening (timeouts, SSRF protection, resource limits, input size limits)
-- make Chrome tab/session handling more robust (leaks, crashes, concurrency edge cases)
-
 ## Status
 
 - **status**: alpha (moving pieces are in place; expect sharp edges)
