@@ -34,6 +34,7 @@ jobs:
       - name: Unit + race + coverage (all modules)
         run: |
           set -euo pipefail
+          root_dir="$PWD"
 
           modules=(
             services/auth-service
@@ -49,32 +50,8 @@ jobs:
 
             echo "==> $m: coverage"
             (cd "$m" && go test ./... -coverprofile=coverage.out)
-            (cd "$m" && awk '
-              NR == 1 { next }
-              {
-                split($1, fileparts, ":")
-                file = fileparts[1]
-                stmts = $2
-                count = $3
-                total[file] += stmts
-                if (count > 0) {
-                  covered[file] += stmts
-                }
-                total_all += stmts
-                if (count > 0) {
-                  covered_all += stmts
-                }
-              }
-              END {
-                print "Coverage by file:"
-                for (f in total) {
-                  pct = (total[f] ? (covered[f] / total[f] * 100) : 0)
-                  printf "  %s: %.1f%% (%d/%d)\n", f, pct, covered[f], total[f]
-                }
-                pct_all = (total_all ? (covered_all / total_all * 100) : 0)
-                printf "Total coverage: %.1f%% (%d/%d)\n", pct_all, covered_all, total_all
-              }
-            ' coverage.out)
+            echo "==> $m: coverage summary"
+            (cd "$m" && go tool cover -func=coverage.out | tail -n 1 | tee "$root_dir/coverage-${m##*/}.txt")
             mv "$m/coverage.out" "coverage-${m##*/}.out"
           done
 
@@ -82,4 +59,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: coverage
-          path: coverage-*.out
+          path: |
+            coverage-*.out
+            coverage-*.txt
