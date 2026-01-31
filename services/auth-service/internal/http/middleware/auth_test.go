@@ -46,7 +46,12 @@ func TestOptionalAPIKeyAuth_TokenStoreNotReady(t *testing.T) {
 func TestOptionalAPIKeyAuth_InvalidAndValidKey(t *testing.T) {
 	app := fiber.New()
 	cache := tokens.NewCache()
-	cache.Replace(map[string]int{"good": 1})
+	cache.Replace(map[string]tokens.Entry{
+		"good": {
+			RateLimit: 1,
+			Scope:     tokens.Scope{"api": true},
+		},
+	})
 
 	app.Use(OptionalAPIKeyAuth(cache))
 	app.Get("/", func(c *fiber.Ctx) error {

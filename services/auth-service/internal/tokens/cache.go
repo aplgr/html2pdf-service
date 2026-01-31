@@ -2,10 +2,17 @@ package tokens
 
 import "sync"
 
-// Cache keeps token -> rateLimit in memory for fast lookup.
+type Scope map[string]bool
+
+type Entry struct {
+	RateLimit int
+	Scope     Scope
+}
+
+// Cache keeps token -> entry in memory for fast lookup.
 type Cache struct {
 	mu sync.RWMutex
-	m  map[string]int
+	m  map[string]Entry
 }
 
 func NewCache() *Cache {
@@ -34,10 +41,23 @@ func (c *Cache) RateLimit(token string) int {
 	if c.m == nil {
 		return 0
 	}
-	return c.m[token]
+	return c.m[token].RateLimit
 }
 
-func (c *Cache) Replace(all map[string]int) {
+func (c *Cache) HasScope(token, scope string) bool {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	if c.m == nil {
+		return false
+	}
+	entry, ok := c.m[token]
+	if !ok {
+		return false
+	}
+	return entry.Scope[scope]
+}
+
+func (c *Cache) Replace(all map[string]Entry) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.m = all

@@ -73,13 +73,9 @@ static_resources:
                             cluster: html2pdf
                             prefix_rewrite: "/"
 
-                        # These routes are intentionally NOT protected by ext_authz (no auth + no rate limiting).
-                        - match: { path: "/health" }
-                          route: { cluster: html2pdf }
-                          typed_per_filter_config:
-                            envoy.filters.http.ext_authz:
-                              "@type": type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthzPerRoute
-                              disabled: true
+                        - match: { prefix: "/ops" }
+                          route:
+                            cluster: html2pdf
 
                         # Docs: everything else goes to nginx.
                         - match: { prefix: "/" }

@@ -14,6 +14,7 @@ import (
 type TokenStore interface {
 	Ready() bool
 	Validate(token string) bool
+	HasScope(token, scope string) bool
 }
 
 func OptionalAPIKeyAuth(tokens TokenStore) fiber.Handler {
@@ -33,11 +34,18 @@ func OptionalAPIKeyAuth(tokens TokenStore) fiber.Handler {
 				logging.Warn("Auth reject", "reason", "invalid_key", "key", redactToken(key), "method", c.Method(), "path", c.Path())
 				return false, domain.ErrInvalidAPIKey
 			}
+			if isOpsPathFromRequest(c.Path()) && !tokens.HasScope(key, "ops") {
+				logging.Warn("Auth reject", "reason", "missing_ops_scope", "key", redactToken(key), "method", c.Method(), "path", c.Path())
+				return false, domain.ErrInvalidAPIKey
+			}
 			logging.Info("Auth allow", "key", redactToken(key), "method", c.Method(), "path", c.Path())
 			return true, nil
 		},
 		// Missing key = public access. Also allow OPTIONS preflight.
 		Next: func(c *fiber.Ctx) bool {
+			if isOpsPathFromRequest(c.Path()) {
+				return false
+			}
 			if c.Method() == fiber.MethodOptions || c.Get("X-API-Key") == "" {
 				logging.Info("Auth allow", "reason", "public", "method", c.Method(), "path", c.Path())
 				return true
@@ -71,4 +79,14 @@ func redactToken(token string) string {
 		return "***"
 	}
 	return token[:4] + "..." + token[len(token)-4:]
+}
+
+func isOpsPathFromRequest(path string) bool {
+	if strings.HasPrefix(path, "/ext-authz") {
+		path = strings.TrimPrefix(path, "/ext-authz")
+		if path == "" {
+			path = "/"
+		}
+	}
+	return path == "/ops" || strings.HasPrefix(path, "/ops/")
 }

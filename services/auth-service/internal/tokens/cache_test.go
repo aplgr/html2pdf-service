@@ -14,7 +14,12 @@ func TestCache_ReadyValidateRateLimit(t *testing.T) {
 		t.Fatalf("expected rate limit 0 when not ready, got %d", got)
 	}
 
-	c.Replace(map[string]int{"abc": 10})
+	c.Replace(map[string]Entry{
+		"abc": {
+			RateLimit: 10,
+			Scope:     Scope{"api": true, "ops": false},
+		},
+	})
 	if !c.Ready() {
 		t.Fatalf("expected cache ready after Replace")
 	}
@@ -29,5 +34,11 @@ func TestCache_ReadyValidateRateLimit(t *testing.T) {
 	}
 	if got := c.RateLimit("missing"); got != 0 {
 		t.Fatalf("expected rate limit 0 for missing token, got %d", got)
+	}
+	if c.HasScope("abc", "ops") {
+		t.Fatalf("expected missing ops scope to be false")
+	}
+	if !c.HasScope("abc", "api") {
+		t.Fatalf("expected api scope to be true")
 	}
 }

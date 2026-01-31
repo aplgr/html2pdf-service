@@ -34,7 +34,7 @@ make stop
 
 - Docs UI: `https://localhost/`
 - API base URL (via Envoy): `https://localhost/api`
-- Health (unprotected): `https://localhost/health`
+- Ops health (requires ops-enabled token): `https://localhost/ops/health`
 
 The curl examples for **POST HTML → PDF** and **GET URL → PDF** are in the [API](#api) section below.
 
@@ -55,6 +55,7 @@ Access + limits are enforced at the edge:
 - **Public access** when no `X-API-Key` header is provided (still rate-limited).
 - **API-key access** via `X-API-Key`
   - tokens + per-token `rate_limit` are stored in Postgres (`tokens` table)
+  - tokens also include a JSONB `scope` (default: `{"api": true}`) to control ops access
   - the dedicated `auth-service` reloads tokens periodically
 - **Rate limiting** is tracked in Redis (shared with the renderer cache)
   - token-based limiting uses the per-token `rate_limit` value
@@ -108,12 +109,12 @@ Client
   ▼
 Envoy (443)
   ├─ /              → Nginx docs UI                 (ext_authz disabled)
-  ├─ /health        → html2pdf (Fiber, 8080)        (ext_authz disabled)
+  ├─ /ops/health    → ext_authz → html2pdf (8080)
   └─ /api/*         → ext_authz → html2pdf (8080)
                        │
                        ▼
                     auth-service (Go, 9000)
-                      ├─ Postgres (tokens table: token + rate_limit)
+                      ├─ Postgres (tokens table: token + rate_limit + scope)
                       └─ Redis (rate limit counters; default DB 0)
 
 html2pdf (Go) also uses Redis for the PDF cache (default DB 1).
@@ -140,7 +141,18 @@ If you expose this service publicly (or run it in production), harden it first:
 - Put Envoy in front (as in this repo) and do not expose the renderer directly.
 - Add SSRF protections if you allow arbitrary `url=...` rendering.
 - Put strict timeouts and size limits on requests and on headless Chrome.
-- Consider stricter auth policies (e.g., require API keys for PDF rendering, keep public access only for docs/health).
+- Consider stricter auth policies (e.g., require API keys for PDF rendering, keep public access only for docs).
+
+### Ops endpoint auth
+
+Ops endpoints (under `/ops/*`) require a token that includes the `ops` scope.
+Tokens are stored in Postgres and default to `{"api": true}`. To allow ops access, set `ops: true`:
+
+```sql
+UPDATE tokens
+SET scope = jsonb_set(scope, '{ops}', 'true', true)
+WHERE token = 'YOUR_TOKEN';
+```
 
 ## Development notes
 

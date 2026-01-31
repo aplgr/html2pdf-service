@@ -8,7 +8,7 @@ import (
 )
 
 type Repository interface {
-	LoadTokens(ctx context.Context) (map[string]int, error)
+	LoadTokens(ctx context.Context) (map[string]Entry, error)
 }
 
 type Reloader struct {

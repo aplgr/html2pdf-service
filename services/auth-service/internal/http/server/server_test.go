@@ -14,7 +14,20 @@ import (
 
 func TestNewApp_ExtAuthzModesAndAuth(t *testing.T) {
 	cache := tokens.NewCache()
-	cache.Replace(map[string]int{"good-get": 1, "good-post": 1})
+	cache.Replace(map[string]tokens.Entry{
+		"good-get": {
+			RateLimit: 1,
+			Scope:     tokens.Scope{"api": true},
+		},
+		"good-post": {
+			RateLimit: 1,
+			Scope:     tokens.Scope{"api": true},
+		},
+		"ops-only": {
+			RateLimit: 1,
+			Scope:     tokens.Scope{"api": true, "ops": true},
+		},
+	})
 
 	deps := Deps{
 		Config: config.Config{
@@ -88,4 +101,23 @@ func TestNewApp_ExtAuthzModesAndAuth(t *testing.T) {
 	assertInvalid(http.MethodPost)
 	assertValidRateLimited(http.MethodGet, "good-get")
 	assertValidRateLimited(http.MethodPost, "good-post")
+
+	assertOpsAuth := func(token string, wantStatus int) {
+		t.Helper()
+		req, _ := http.NewRequest(http.MethodGet, "/ext-authz/ops/health", nil)
+		if token != "" {
+			req.Header.Set("X-API-Key", token)
+		}
+		resp, err := app.Test(req)
+		if err != nil {
+			t.Fatalf("request failed: %v", err)
+		}
+		if resp.StatusCode != wantStatus {
+			t.Fatalf("expected %d, got %d", wantStatus, resp.StatusCode)
+		}
+	}
+
+	assertOpsAuth("", fiber.StatusUnauthorized)
+	assertOpsAuth("good-get", fiber.StatusUnauthorized)
+	assertOpsAuth("ops-only", fiber.StatusOK)
 }

@@ -8,15 +8,15 @@ import (
 )
 
 type fakeRepo struct {
-	m   map[string]int
+	m   map[string]Entry
 	err error
 }
 
-func (r fakeRepo) LoadTokens(ctx context.Context) (map[string]int, error) {
+func (r fakeRepo) LoadTokens(ctx context.Context) (map[string]Entry, error) {
 	if r.err != nil {
 		return nil, r.err
 	}
-	out := make(map[string]int, len(r.m))
+	out := make(map[string]Entry, len(r.m))
 	for k, v := range r.m {
 		out[k] = v
 	}
@@ -25,7 +25,12 @@ func (r fakeRepo) LoadTokens(ctx context.Context) (map[string]int, error) {
 
 func TestReloader_LoadOnce_Success(t *testing.T) {
 	c := NewCache()
-	r := NewReloader(fakeRepo{m: map[string]int{"k": 3}}, c, time.Hour)
+	r := NewReloader(fakeRepo{m: map[string]Entry{
+		"k": {
+			RateLimit: 3,
+			Scope:     Scope{"api": true},
+		},
+	}}, c, time.Hour)
 
 	if err := r.LoadOnce(context.Background()); err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -40,7 +45,12 @@ func TestReloader_LoadOnce_Success(t *testing.T) {
 
 func TestReloader_LoadOnce_Error_DoesNotReplace(t *testing.T) {
 	c := NewCache()
-	c.Replace(map[string]int{"keep": 7})
+	c.Replace(map[string]Entry{
+		"keep": {
+			RateLimit: 7,
+			Scope:     Scope{"api": true},
+		},
+	})
 
 	expectedErr := errors.New("boom")
 	r := NewReloader(fakeRepo{err: expectedErr}, c, time.Hour)

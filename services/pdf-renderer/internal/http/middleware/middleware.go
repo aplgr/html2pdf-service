@@ -26,7 +26,10 @@ func Register(app *fiber.App, cfg config.Config) {
 		},
 	}))
 
-	app.Use(healthcheck.New())
+	app.Use(healthcheck.New(healthcheck.Config{
+		LivenessEndpoint:  "/ops/health",
+		ReadinessEndpoint: "/ops/health",
+	}))
 
 	app.Use(func(c *fiber.Ctx) error {
 		requestID := c.Get("X-Request-ID")
