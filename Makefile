@@ -3,6 +3,9 @@
 COMPOSE_FILE := deploy/docker-compose.yml
 DC := docker compose -f $(COMPOSE_FILE)
 
+# Use bash for stricter error handling (pipefail)
+SHELL := /usr/bin/env bash
+
 help:
 	@echo "Targets:"
 	@echo "  make start          Build & start the stack (detached)"
@@ -51,3 +54,74 @@ pull:
 
 clean:
 	@$(DC) down -v
+
+
+### TESTING ###
+
+# List of Go modules (relative to repo root)
+MODULES := services/auth-service services/pdf-renderer
+
+# Race tests require cgo. Allow override: CGO_ENABLED=0 make test-race
+CGO_ENABLED ?= 1
+export CGO_ENABLED
+
+.PHONY: test-all test test-race test-cover lint fmt tidy clean-tests
+
+# Run everything (tests, race, coverage, lint)
+test-all: test test-race test-cover lint
+
+# Run unit tests for all modules
+test:
+	@set -euo pipefail; \
+	for m in $(MODULES); do \
+		echo "==> $$m: unit tests"; \
+		go -C $$m test ./...; \
+	done
+
+# Run race tests for all modules
+test-race:
+	@set -euo pipefail; \
+	for m in $(MODULES); do \
+		echo "==> $$m: race tests"; \
+		go -C $$m test -race ./...; \
+	done
+
+# Run coverage for all modules and write coverage profiles + summaries to ./coverage/
+test-cover:
+	@set -euo pipefail; \
+	mkdir -p coverage; \
+	for m in $(MODULES); do \
+		name=$$(basename $$m); \
+		echo "==> $$m: coverage"; \
+		go -C $$m test ./... -coverprofile="$$PWD/coverage/coverage-$${name}.out"; \
+		echo "==> $$m: coverage (full report saved)"; \
+		go -C $$m tool cover -func="$$PWD/coverage/coverage-$${name}.out" | tee "coverage/coverage-$${name}.txt" | tail -n 1; \
+	done
+
+# Run golangci-lint for all modules (expects golangci-lint installed locally)
+lint:
+	@set -euo pipefail; \
+	for m in $(MODULES); do \
+		echo "==> $$m: golangci-lint"; \
+		( cd $$m && golangci-lint run ./... ); \
+	done
+
+# Run gofmt for all modules
+fmt:
+	@set -euo pipefail; \
+	for m in $(MODULES); do \
+		echo "==> $$m: gofmt"; \
+		( cd $$m && gofmt -w $$(go list -f '{{.Dir}}' ./... 2>/dev/null) ); \
+	done
+
+# Run go mod tidy for all modules
+tidy:
+	@set -euo pipefail; \
+	for m in $(MODULES); do \
+		echo "==> $$m: go mod tidy"; \
+		go -C $$m mod tidy; \
+	done
+
+# Clean generated artifacts
+clean-tests:
+	rm -rf coverage

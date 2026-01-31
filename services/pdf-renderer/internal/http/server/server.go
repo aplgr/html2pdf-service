@@ -7,7 +7,6 @@ import (
 	"pdf-renderer/internal/infra/logging"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/monitor"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -63,6 +62,4 @@ func registerRoutes(app *fiber.App, cfg config.Config, redis *redis.Client) {
 	v0.Post("/pdf", svc.HandleConversion)
 	v0.Get("/pdf", svc.HandleURLConversion)
 	v0.Get("/chrome/stats", svc.HandleChromeStats)
-
-	v0.Get("/monitor", monitor.New())
 }

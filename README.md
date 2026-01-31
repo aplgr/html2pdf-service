@@ -35,7 +35,6 @@ make stop
 - Docs UI: `https://localhost/`
 - API base URL (via Envoy): `https://localhost/api`
 - Health (unprotected): `https://localhost/health`
-- Metrics (unprotected): `https://localhost/metrics`
 
 The curl examples for **POST HTML → PDF** and **GET URL → PDF** are in the [API](#api) section below.
 
@@ -110,7 +109,6 @@ Client
 Envoy (443)
   ├─ /              → Nginx docs UI                 (ext_authz disabled)
   ├─ /health        → html2pdf (Fiber, 8080)        (ext_authz disabled)
-  ├─ /metrics       → html2pdf (Fiber, 8080)        (ext_authz disabled)
   └─ /api/*         → ext_authz → html2pdf (8080)
                        │
                        ▼

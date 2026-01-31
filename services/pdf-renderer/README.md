@@ -27,9 +27,6 @@ All endpoints are under `/v0`:
 - `GET /v0/chrome/stats`
   - Basic stats about the Chrome pool (useful for debugging load / pooling).
 
-- `GET /v0/monitor`
-  - Fiber monitor endpoint (intended for internal use).
-
 ## Configuration
 
 Configuration is YAML-driven. By default the service loads:
