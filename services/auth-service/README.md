@@ -1,4 +1,4 @@
-# html2pdf-auth-service
+# auth-service
 
 This service is meant to sit in front of one or more internal microservices behind Envoy.
 Envoy calls it via `ext_authz` (HTTP service) to decide whether a request is allowed.
@@ -27,31 +27,13 @@ Postgres is used only for token storage.
 - `GET /health`
   - Basic health check endpoint (Fiber healthcheck middleware)
 
-## Configuration (environment variables)
+## Configuration (YAML file)
 
-All config is environment-driven (Docker friendly). The names match the project compose setup.
+The auth-service loads configuration from `config/auth-service.yaml` by default. You can override
+the location by setting `CONFIG_PATH`.
 
-### Server
-
-- `AUTH_LISTEN_ADDR` (default `:8081`)
-
-### Postgres token store
-
-- `AUTH_POSTGRES_DSN` (e.g. `postgres://html2pdf:html2pdf@postgres:5432/html2pdf?sslmode=disable`)
-- `AUTH_TOKEN_RELOAD_INTERVAL` (default `10s`)
-
-### Redis rate limit store
-
-- `AUTH_REDIS_ADDR` (default `redis:6379`)
-- `AUTH_REDIS_PASSWORD` (default empty)
-- `AUTH_REDIS_RATE_DB` (default `0`)
-
-### Rate limiting behaviour
-
-- `AUTH_RL_INTERVAL` (default `1h`)
-- `AUTH_RL_ENABLE_USER_LIMITER` (default `true`)
-- `AUTH_RL_USER_LIMIT` (default `60`)
-- `AUTH_RL_ENABLE_TOKEN_LIMITER` (default `true`)
+The sample config lives at `services/auth-service/config/auth-service.yaml` and mirrors the
+Docker Compose defaults (listen address, Postgres DSN, Redis settings, rate limiting, and logging).
 
 ## How it is used from Envoy (conceptual)
 
@@ -79,7 +61,8 @@ go build ./cmd/auth-service
 The auth-service owns the `tokens` table schema. Apply migrations during deployment (not at runtime):
 
 ```bash
-psql "$AUTH_POSTGRES_DSN" -f services/auth-service/deploy/postgres/migrations/001_create_tokens_table.sql
+psql "postgres://html2pdf:html2pdf@postgres:5432/html2pdf?sslmode=disable" \
+  -f services/auth-service/deploy/postgres/migrations/001_create_tokens_table.sql
 ```
 
 The migration is idempotent and safe to re-run for existing deployments.
@@ -90,7 +73,8 @@ Deploys should fail fast if the schema is missing or invalid. The verification s
 the extension is available, then run it as part of the deployment pipeline:
 
 ```bash
-psql "$AUTH_POSTGRES_DSN" -f services/auth-service/deploy/postgres/verify_tokens_schema.sql
+psql "postgres://html2pdf:html2pdf@postgres:5432/html2pdf?sslmode=disable" \
+  -f services/auth-service/deploy/postgres/verify_tokens_schema.sql
 ```
 
 The script raises an error if required tables, columns, or indexes are missing.

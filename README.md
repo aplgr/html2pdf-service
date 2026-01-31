@@ -77,13 +77,13 @@ One Docker Compose stack with:
 ### POST HTML → PDF
 
 ```bash
-curl -k -X POST "https://localhost/api/v0/pdf"   -F "html=<h1>Hello PDF</h1>"   -o out.pdf
+curl -k -X POST "https://localhost/api/v0/pdf" --form-string "html=<h1>Hello PDF</h1>" -o out.pdf
 ```
 
 ### GET URL → PDF
 
 ```bash
-curl -k -L "https://localhost/api/v0/pdf?url=https://example.org" -o out.pdf
+curl -k "https://localhost/api/v0/pdf?url=https://example.org" -o out.pdf
 ```
 
 ### Auth / Rate limits
@@ -92,7 +92,7 @@ curl -k -L "https://localhost/api/v0/pdf?url=https://example.org" -o out.pdf
 - API-key request:
 
 ```bash
-curl -k -H "X-API-Key: YOUR_TOKEN"   -X POST "https://localhost/api/v0/pdf"   -F "html=<h1>Hello PDF</h1>"   -o out.pdf
+curl -k -H "X-API-Key: YOUR_TOKEN" -X POST "https://localhost/api/v0/pdf" --for-string "html=<h1>Hello PDF</h1>" -o out.pdf
 ```
 
 If a key is invalid → **401**. If a limit is exceeded → **429**.

@@ -15,6 +15,7 @@ RUN apk add --no-cache ca-certificates dumb-init
 WORKDIR /app
 
 COPY --from=builder /build/auth-service /app/auth-service
+COPY --from=builder /build/config /app/config
 
 ENTRYPOINT ["dumb-init", "--"]
 CMD ["./auth-service"]

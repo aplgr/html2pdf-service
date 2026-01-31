@@ -2,24 +2,33 @@ package main
 
 import (
 	"context"
-	"io"
-	"log"
+	"fmt"
 	"os"
 	"path/filepath"
 
-	"html2pdf-auth-service/internal/tokens"
-	"html2pdf-auth-service/internal/config"
-	"html2pdf-auth-service/internal/infra/postgres"
-	"html2pdf-auth-service/internal/http/server"
+	"auth-service/internal/config"
+	"auth-service/internal/http/server"
+	"auth-service/internal/infra/logging"
+	"auth-service/internal/infra/postgres"
+	"auth-service/internal/tokens"
 )
 
 func main() {
-	logFile := setupLogging()
-	if logFile != nil {
-		defer logFile.Close()
+	cfg := config.Load()
+
+	if err := ensureLogDir(cfg.Logger.File); err != nil {
+		fmt.Fprintf(os.Stderr, "failed to create log directory for %s: %v\n", cfg.Logger.File, err)
 	}
 
-	cfg := config.Load()
+	logging.InitLogger(
+		cfg.Logger.File,
+		cfg.Logger.MaxSizeMB,
+		cfg.Logger.MaxBackups,
+		cfg.Logger.MaxAgeDays,
+		cfg.Logger.Compress,
+		cfg.Logger.Level,
+	)
+	logging.SetLogLevel(cfg.Logger.Level)
 
 	// Token cache + repository
 	cache := tokens.NewCache()
@@ -28,9 +37,9 @@ func main() {
 
 	// Initial token load (may fail if DB not ready yet).
 	if err := tokens.NewReloader(repo, cache, cfg.TokenReloadInterval).LoadOnce(context.Background()); err != nil {
-		log.Printf("initial token load failed: %v", err)
+		logging.Error("Initial token load failed", "error", err)
 	} else {
-		log.Printf("token store ready")
+		logging.Info("Token store ready")
 	}
 
 	// Periodic reload.
@@ -44,24 +53,18 @@ func main() {
 		TokenCache: cache,
 		Store:      store,
 	}); err != nil {
-		log.Fatal(err)
+		logging.Error("Server stopped with error", "error", err)
+		os.Exit(1)
 	}
 }
 
-func setupLogging() *os.File {
-	logDir := "/logs"
-	if err := os.MkdirAll(logDir, 0o755); err != nil {
-		log.Printf("failed to create log dir %s: %v", logDir, err)
+func ensureLogDir(logPath string) error {
+	if logPath == "" {
 		return nil
 	}
-	path := filepath.Join(logDir, "auth-service.log")
-	file, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
-	if err != nil {
-		log.Printf("failed to open log file %s: %v", path, err)
+	logDir := filepath.Dir(logPath)
+	if logDir == "." || logDir == "/" {
 		return nil
 	}
-	log.SetOutput(io.MultiWriter(os.Stdout, file))
-	log.SetFlags(log.LstdFlags | log.LUTC)
-	log.Printf("logging to %s", path)
-	return file
+	return os.MkdirAll(logDir, 0o755)
 }

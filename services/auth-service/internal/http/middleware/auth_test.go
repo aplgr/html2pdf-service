@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"testing"
 
+	"auth-service/internal/tokens"
 	"github.com/gofiber/fiber/v2"
-	"html2pdf-auth-service/internal/tokens"
 )
 
 func TestOptionalAPIKeyAuth_PublicAccess(t *testing.T) {

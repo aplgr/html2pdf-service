@@ -1,0 +1,22 @@
+listen_addr: ":9000"
+
+postgres_dsn: "postgres://html2pdf:html2pdf@postgres:5432/html2pdf?sslmode=disable"
+
+logger:
+  file: "/logs/auth-service.log"
+  level: "info"
+  max_size_mb: 1
+  max_backups: 5
+  max_age_days: 7
+  compress: true
+
+redis_addr: "redis:6379"
+redis_password: ""
+redis_rate_db: 0
+
+token_reload_interval: 1m
+
+rate_interval: 1h
+enable_user_limiter: true
+user_limit: 20
+enable_token_rate_limiter: true

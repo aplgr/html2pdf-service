@@ -10,9 +10,9 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/redis/go-redis/v9"
 
-	"html2pdf/internal/config"
-	"html2pdf/internal/http/server"
-	"html2pdf/internal/infra/logging"
+	"pdf-renderer/internal/config"
+	"pdf-renderer/internal/http/server"
+	"pdf-renderer/internal/infra/logging"
 )
 
 var RedisClient *redis.Client

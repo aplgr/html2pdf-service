@@ -233,11 +233,12 @@
                 <div class="flex-grow-1">
                   <div class="fw-semibold mb-1">Local smoke test</div>
                   <div class="small-muted mb-2">POST HTML → PDF</div>
-                  <pre><code>curl -X POST http://localhost/api/v0/pdf \\
-  -H "X-API-Key: abc123-test-first-token" \\
-  -F "html=&lt;h1&gt;Hello PDF&lt;/h1&gt;" \\
-  -F "format=A4" -F "orientation=portrait" -F "margin=0.4" \\
-  --output out.pdf</code></pre>
+                  <pre><code>curl -k -H "X-API-Key: &lt;your-api-key&gt;" \\
+-X POST "https://localhost/api/v0/pdf" \\
+--form-string 'html=&lt;h1&gt;Hello PDF&lt;/h1&gt;' \\
+-F "format=A4" -F "orientation=portrait" -F "margin=0.4" \\
+-o out.pdf
+                    </code></pre>
                 </div>
               </div>
             </div>
@@ -384,10 +385,9 @@
                     </div>
                   </div>
                   <textarea class="form-control font-monospace" rows="11" x-model="html"></textarea>
-                  <div class="form-text">
-                    Used as <code>POST /api/v0/pdf</code> with multipart form-data.
-                    <span class="ms-1" x-show="selectedExample" x-cloak>
-                      Loaded: <code x-text="selectedExample && selectedExample.path"></code>
+                  <div class="form-text"> Used as <code>POST /api/v0/pdf</code> with multipart form-data. <span
+                          class="ms-1" x-show="selectedExample" x-cloak> Loaded: <code
+                            x-text="selectedExample && selectedExample.path"></code>
                     </span>
                   </div>
                   <div class="form-text text-danger" x-show="examplesError" x-text="examplesError" x-cloak></div>
@@ -547,15 +547,15 @@ cd html2pdf-service</code></pre>
               </div>
               <div class="p-3 p-md-4">
                 <div class="small-muted mb-2">GET (URL → PDF)</div>
-                <pre><code>curl -X GET "http://localhost/api/v0/pdf?url=https://example.com&amp;format=A4&amp;orientation=portrait&amp;margin=0.4" \\
-  -H "X-API-Key: abc123-test-first-token" \\
-  --output page.pdf</code></pre>
+                <pre><code>curl -k -H "X-API-Key: &lt;your-api-key&gt;" \\
+  -X GET "https://localhost/api/v0/pdf?url=https://example.com&amp;format=A4&amp;orientation=portrait&amp;margin=0.4" \\
+  -o page.pdf</code></pre>
                 <div class="small-muted mt-3 mb-2">POST (HTML → PDF)</div>
-                <pre><code>curl -X POST http://localhost/api/v0/pdf \\
-  -H "X-API-Key: abc123-test-first-token" \\
-  -F "html=&lt;h1&gt;Hello&lt;/h1&gt;" \\
+                <pre><code>curl -k -H "X-API-Key: &lt;your-api-key&gt;" \\
+  -X POST https://localhost/api/v0/pdf \\
+  --form-string "html=&lt;h1&gt;Hello&lt;/h1&gt;" \\
   -F "format=A4" -F "orientation=portrait" -F "margin=0.4" \\
-  --output out.pdf</code></pre>
+  -o page.pdf</code></pre>
               </div>
             </div>
           </div>
@@ -645,11 +645,11 @@ cd html2pdf-service</code></pre>
                   </table>
                 </div>
                 <hr>
-                <pre><code>curl -X POST http://localhost/api/v0/pdf \\
-  -H "X-API-Key: &lt;your-api-key&gt;" \\
+                <pre><code>curl -k -H "X-API-Key: &lt;your-api-key&gt;" \\
+  -X POST https://localhost/api/v0/pdf \\
   -F "html=@./invoice.html" \\
   -F "format=A4" -F "orientation=portrait" -F "margin=0.4" \\
-  --output invoice.pdf</code></pre>
+  -o invoice.pdf</code></pre>
               </div>
             </div>
           </div>
@@ -705,9 +705,9 @@ cd html2pdf-service</code></pre>
                   </table>
                 </div>
                 <hr>
-                <pre><code>curl -X GET "http://localhost/api/v0/pdf?url=https://example.com&amp;format=A4&amp;orientation=portrait&amp;margin=0.4" \\
-  -H "X-API-Key: &lt;your-api-key&gt;" \\
-  --output page.pdf</code></pre>
+                <pre><code>curl -k -H "X-API-Key: &lt;your-api-key&gt;"\\
+  -X GET "https://localhost/api/v0/pdf?url=https://example.com&amp;format=A4&amp;orientation=portrait&amp;margin=0.4" \\
+  -o page.pdf</code></pre>
               </div>
             </div>
           </div>
@@ -862,10 +862,10 @@ cd html2pdf-service</code></pre>
               `url=${encodeURIComponent(u)}`,
               fmt, ori, mar, fn
             ].filter(Boolean).join('&');
-            return `curl -X GET "${base}/v0/pdf?${q}" \\\n  -H "X-API-Key: ${key}" \\\n  --output ${this.filename || 'out.pdf'}`;
+            return `curl -k -H "X-API-Key: ${key}" \\\\\n -X GET "${base}/v0/pdf?${q}" \\\\\n -o ${this.filename || 'out.pdf'}`;
           }
 
-          return `curl -X POST ${base}/v0/pdf \\\n  -H "X-API-Key: ${key}" \\\n  -F "html=<your html>" \\\n  ${this.format ? `-F "format=${this.format}" \\\n  ` : ''}${this.orientation ? `-F "orientation=${this.orientation}" \\\n  ` : ''}${(this.margin != null && this.margin !== '') ? `-F "margin=${String(this.margin)}" \\\n  ` : ''}${this.filename ? `-F "filename=${this.filename}" \\\n  ` : ''}--output ${this.filename || 'out.pdf'}`;
+          return `curl -k -H "X-API-Key: ${key}" \\\\\n -X POST ${base}/v0/pdf \\\\\n  --form-string "html=<your html>" \\\\\n  ${this.format ? `-F "format=${this.format}" \\\\\n  ` : ''}${this.orientation ? `-F "orientation=${this.orientation}" \\\\\n  ` : ''}${(this.margin != null && this.margin !== '') ? `-F "margin=${String(this.margin)}" \\\\\n  ` : ''}${this.filename ? `-F "filename=${this.filename}" \\\\\n  ` : ''}-o ${this.filename || 'out.pdf'}`;
         },
 
         async copy(text) {

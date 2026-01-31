@@ -2,16 +2,16 @@ package server
 
 import (
 	"context"
-	"log"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/healthcheck"
 
-	"html2pdf-auth-service/internal/tokens"
-	"html2pdf-auth-service/internal/config"
-	"html2pdf-auth-service/internal/infra/ratelimit"
-	"html2pdf-auth-service/internal/http/handlers"
-	"html2pdf-auth-service/internal/http/middleware"
+	"auth-service/internal/config"
+	"auth-service/internal/http/handlers"
+	"auth-service/internal/http/middleware"
+	"auth-service/internal/infra/logging"
+	"auth-service/internal/infra/ratelimit"
+	"auth-service/internal/tokens"
 )
 
 type Deps struct {
@@ -58,7 +58,7 @@ func NewApp(deps Deps) *fiber.App {
 func Run(ctx context.Context, deps Deps) error {
 	_ = ctx
 	app := NewApp(deps)
-	log.Printf("auth-service listening on %s", deps.Config.ListenAddr)
+	logging.Info("Auth service listening", "addr", deps.Config.ListenAddr)
 	return app.Listen(deps.Config.ListenAddr)
 }
 

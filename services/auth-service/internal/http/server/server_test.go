@@ -8,8 +8,8 @@ import (
 	"github.com/gofiber/fiber/v2"
 	memoryStorage "github.com/gofiber/storage/memory/v2"
 
-	"html2pdf-auth-service/internal/config"
-	"html2pdf-auth-service/internal/tokens"
+	"auth-service/internal/config"
+	"auth-service/internal/tokens"
 )
 
 func TestNewApp_ExtAuthzModesAndAuth(t *testing.T) {
@@ -18,10 +18,10 @@ func TestNewApp_ExtAuthzModesAndAuth(t *testing.T) {
 
 	deps := Deps{
 		Config: config.Config{
-			ListenAddr:            ":0",
-			RateInterval:          time.Hour,
-			EnableUserLimiter:     false,
-			UserLimit:             0,
+			ListenAddr:             ":0",
+			RateInterval:           time.Hour,
+			EnableUserLimiter:      false,
+			UserLimit:              0,
 			EnableTokenRateLimiter: true,
 		},
 		TokenCache: cache,

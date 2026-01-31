@@ -10,7 +10,7 @@ limits:
   max_pdf_bytes: 5242880  # 5 MB
 
 logger:
-  file: "logs/html2pdf.log"
+  file: "logs/pdf-renderer.log"
   level: "info"
   max_size_mb: 1      # Max logfile size in MB
   max_backups: 5      # Number of old logfiles to keep

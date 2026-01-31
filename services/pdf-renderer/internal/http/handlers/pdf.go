@@ -19,9 +19,9 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/redis/go-redis/v9"
 
-	"html2pdf/internal/config"
-	"html2pdf/internal/infra/chrome"
-	"html2pdf/internal/infra/logging"
+	"pdf-renderer/internal/config"
+	"pdf-renderer/internal/infra/chrome"
+	"pdf-renderer/internal/infra/logging"
 )
 
 // PDFRequestParams holds validated input parameters.

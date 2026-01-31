@@ -2,8 +2,9 @@ package tokens
 
 import (
 	"context"
-	"log"
 	"time"
+
+	"auth-service/internal/infra/logging"
 )
 
 type Repository interface {
@@ -39,7 +40,7 @@ func (r *Reloader) Start(ctx context.Context) {
 				return
 			case <-t.C:
 				if err := r.LoadOnce(ctx); err != nil {
-					log.Printf("token reload failed: %v", err)
+					logging.Error("Token reload failed", "error", err)
 				}
 			}
 		}

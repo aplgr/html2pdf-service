@@ -13,8 +13,8 @@ import (
 
 	"github.com/chromedp/chromedp"
 
-	"html2pdf/internal/config"
-	"html2pdf/internal/infra/logging"
+	"pdf-renderer/internal/config"
+	"pdf-renderer/internal/infra/logging"
 )
 
 // Tab represents a single-use Chrome tab (chromedp context) created from a shared browser instance.

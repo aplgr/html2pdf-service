@@ -2,13 +2,13 @@ package middleware
 
 import (
 	"errors"
-	"log"
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/keyauth"
 
-	"html2pdf-auth-service/internal/domain"
+	"auth-service/internal/domain"
+	"auth-service/internal/infra/logging"
 )
 
 type TokenStore interface {
@@ -26,20 +26,20 @@ func OptionalAPIKeyAuth(tokens TokenStore) fiber.Handler {
 				key = trimmed
 			}
 			if !tokens.Ready() {
-				log.Printf("auth reject reason=token_store_not_ready method=%s path=%s", c.Method(), c.Path())
+				logging.Warn("Auth reject", "reason", "token_store_not_ready", "method", c.Method(), "path", c.Path())
 				return false, domain.ErrTokenStoreNotReady
 			}
 			if !tokens.Validate(key) {
-				log.Printf("auth reject reason=invalid_key key=%s method=%s path=%s", redactToken(key), c.Method(), c.Path())
+				logging.Warn("Auth reject", "reason", "invalid_key", "key", redactToken(key), "method", c.Method(), "path", c.Path())
 				return false, domain.ErrInvalidAPIKey
 			}
-			log.Printf("auth allow key=%s method=%s path=%s", redactToken(key), c.Method(), c.Path())
+			logging.Info("Auth allow", "key", redactToken(key), "method", c.Method(), "path", c.Path())
 			return true, nil
 		},
 		// Missing key = public access. Also allow OPTIONS preflight.
 		Next: func(c *fiber.Ctx) bool {
 			if c.Method() == fiber.MethodOptions || c.Get("X-API-Key") == "" {
-				log.Printf("auth allow reason=public method=%s path=%s", c.Method(), c.Path())
+				logging.Info("Auth allow", "reason", "public", "method", c.Method(), "path", c.Path())
 				return true
 			}
 			return false
@@ -52,7 +52,7 @@ func OptionalAPIKeyAuth(tokens TokenStore) fiber.Handler {
 			if errors.Is(err, domain.ErrTokenStoreNotReady) {
 				status = fiber.StatusServiceUnavailable
 			}
-			log.Printf("auth error status=%d message=%s method=%s path=%s", status, err.Error(), c.Method(), c.Path())
+			logging.Warn("Auth error", "status", status, "message", err.Error(), "method", c.Method(), "path", c.Path())
 			return c.Status(status).JSON(fiber.Map{
 				"error": fiber.Map{
 					"code":    status,

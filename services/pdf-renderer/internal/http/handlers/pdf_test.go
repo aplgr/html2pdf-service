@@ -1,9 +1,9 @@
 package handlers
 
 import (
-	"html2pdf/internal/config"
 	"net/http"
 	"net/http/httptest"
+	"pdf-renderer/internal/config"
 	"strings"
 	"testing"
 	"time"

@@ -1,4 +1,4 @@
-module html2pdf
+module pdf-renderer
 
 go 1.23.0
 

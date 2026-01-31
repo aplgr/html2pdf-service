@@ -1,8 +1,8 @@
 package middleware
 
 import (
-	"html2pdf/internal/config"
-	"html2pdf/internal/infra/logging"
+	"pdf-renderer/internal/config"
+	"pdf-renderer/internal/infra/logging"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"

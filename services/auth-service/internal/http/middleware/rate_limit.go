@@ -3,12 +3,13 @@ package middleware
 import (
 	"crypto/sha256"
 	"encoding/hex"
-	"log"
 	"sync"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/limiter"
+
+	"auth-service/internal/infra/logging"
 )
 
 type TokenRater interface {
@@ -52,7 +53,7 @@ func (lc *LimiterCache) GetOrCreate(max int, interval time.Duration, store fiber
 		},
 		LimitReached: func(c *fiber.Ctx) error {
 			token, _ := c.Locals("api_key").(string)
-			log.Printf("rate limit exceeded token=%s path=%s", token, c.Path())
+			logging.Warn("Rate limit exceeded", "token", token, "path", c.Path())
 			return c.Status(fiber.StatusTooManyRequests).JSON(fiber.Map{
 				"error": fiber.Map{
 					"code":    fiber.StatusTooManyRequests,
@@ -105,7 +106,7 @@ func UserRateLimit(cfg RateLimitConfig, store fiber.Storage) fiber.Handler {
 		LimitReached: func(c *fiber.Ctx) error {
 			sum := sha256.Sum256([]byte(c.IP() + c.Get("User-Agent")))
 			key := hex.EncodeToString(sum[:])
-			log.Printf("rate limit exceeded user=%s path=%s", key, c.Path())
+			logging.Warn("Rate limit exceeded", "user", key, "path", c.Path())
 			return c.Status(fiber.StatusTooManyRequests).JSON(fiber.Map{
 				"error": fiber.Map{
 					"code":    fiber.StatusTooManyRequests,

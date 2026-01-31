@@ -31,17 +31,9 @@ services:
     - redis
     - postgres
     - auth-migrate
-    environment:
-      AUTH_LISTEN: :9000
-      AUTH_PG_DSN: postgres://html2pdf:html2pdf@postgres:5432/html2pdf?sslmode=disable
-      AUTH_REDIS_ADDR: redis:6379
-      AUTH_REDIS_RATE_DB: '0'
-      AUTH_RL_INTERVAL: 1h
-      AUTH_TOKEN_RELOAD: 1m
-      AUTH_ENABLE_USER_LIMITER: 'true'
-      AUTH_USER_LIMIT: '20'
     volumes:
     - ../logs:/logs
+    - ../services/auth-service/config/auth-service.yaml:/app/config/auth-service.yaml:ro
   auth-migrate:
     image: postgres:16-alpine
     depends_on:

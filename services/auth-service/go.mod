@@ -1,4 +1,4 @@
-module html2pdf-auth-service
+module auth-service
 
 go 1.23.0
 
@@ -7,6 +7,9 @@ require (
 	github.com/gofiber/storage/memory/v2 v2.1.1
 	github.com/gofiber/storage/redis/v2 v2.0.0
 	github.com/jackc/pgx/v5 v5.7.6
+	github.com/rs/zerolog v1.34.0
+	gopkg.in/natefinch/lumberjack.v2 v2.2.1
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
