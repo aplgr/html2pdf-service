@@ -35,7 +35,7 @@ services:
     - ../logs:/logs
     - ../services/auth-service/config/auth-service.yaml:/app/config/auth-service.yaml:ro
   auth-migrate:
-    image: postgres:16-alpine
+    image: postgres:16
     depends_on:
     - postgres
     environment:
@@ -47,6 +47,9 @@ services:
     - sh
     - -c
     - >-
+      apt-get update;
+      apt-get install -y postgresql-16-pgtap;
+      rm -rf /var/lib/apt/lists/*;
       until pg_isready -h postgres -U html2pdf -d html2pdf; do sleep 1; done;
       psql -h postgres -U html2pdf -d html2pdf -v ON_ERROR_STOP=1 -f /migrations/001_create_tokens_table.sql;
       psql -h postgres -U html2pdf -d html2pdf -v ON_ERROR_STOP=1 -f /verify_tokens_schema.sql;
