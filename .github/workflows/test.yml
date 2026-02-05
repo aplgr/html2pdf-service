@@ -15,6 +15,13 @@ concurrency:
 jobs:
   test:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        module:
+          - services/auth-service
+          - services/pdf-renderer
+    name: ${{ matrix.module }} tests
 
     steps:
       - name: Checkout
@@ -23,42 +30,31 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          # This repository contains multiple Go modules under services/.
-          # We pin the toolchain based on one of the module go.mod files.
-          go-version-file: services/pdf-renderer/go.mod
+          go-version-file: ${{ matrix.module }}/go.mod
           cache: true
-          cache-dependency-path: |
-            services/auth-service/go.sum
-            services/pdf-renderer/go.sum
+          cache-dependency-path: ${{ matrix.module }}/go.sum
 
-      - name: Unit + race + coverage (all modules)
+      - name: Unit tests
+        working-directory: ${{ matrix.module }}
+        run: go test ./...
+
+      - name: Race tests
+        working-directory: ${{ matrix.module }}
+        run: go test -race ./...
+
+      - name: Coverage
+        working-directory: ${{ matrix.module }}
+        run: go test ./... -coverprofile=coverage.out
+
+      - name: Coverage summary
+        working-directory: ${{ matrix.module }}
         run: |
-          set -euo pipefail
-          root_dir="$PWD"
-
-          modules=(
-            services/auth-service
-            services/pdf-renderer
-          )
-
-          for m in "${modules[@]}"; do
-            echo "==> $m: unit"
-            (cd "$m" && go test ./...)
-
-            echo "==> $m: race"
-            (cd "$m" && go test -race ./...)
-
-            echo "==> $m: coverage"
-            (cd "$m" && go test ./... -coverprofile=coverage.out)
-            echo "==> $m: coverage summary"
-            (cd "$m" && go tool cover -func=coverage.out | tail -n 1 | tee "$root_dir/coverage-${m##*/}.txt")
-            mv "$m/coverage.out" "coverage-${m##*/}.out"
-          done
+          go tool cover -func=coverage.out | tail -n 1 | tee coverage-summary.txt
 
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v4
         with:
-          name: coverage
+          name: coverage-${{ matrix.module }}
           path: |
-            coverage-*.out
-            coverage-*.txt
+            ${{ matrix.module }}/coverage.out
+            ${{ matrix.module }}/coverage-summary.txt
