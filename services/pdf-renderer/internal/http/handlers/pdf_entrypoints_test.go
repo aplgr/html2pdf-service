@@ -114,9 +114,7 @@ func TestRenderPDF_UsesExistingPoolAcquireFailure(t *testing.T) {
 
 	// Can't set unexported sem directly from different package; instead verify path through getChromePool error cache.
 	svc.poolErr = context.DeadlineExceeded
-	if _, err := svc.getChromePool(); err != nil {
-		// ignore, just exercise getChromePool read path
-	}
+	_, _ = svc.getChromePool()
 
 	// render still goes through configured pool path if pool exists; with zero-value pool, acquire returns ctx deadline quickly.
 	ctxPool := &chrome.Pool{}

@@ -26,7 +26,7 @@ func TestCreateProfileDir_DefaultAndCustomBase(t *testing.T) {
 	if err != nil {
 		t.Fatalf("createProfileDir default base failed: %v", err)
 	}
-	defer os.RemoveAll(dir1)
+	defer func() { _ = os.RemoveAll(dir1) }()
 	if _, err := os.Stat(dir1); err != nil {
 		t.Fatalf("expected created dir to exist: %v", err)
 	}
@@ -37,7 +37,7 @@ func TestCreateProfileDir_DefaultAndCustomBase(t *testing.T) {
 	if err != nil {
 		t.Fatalf("createProfileDir custom base failed: %v", err)
 	}
-	defer os.RemoveAll(dir2)
+	defer func() { _ = os.RemoveAll(dir2) }()
 	if filepath.Dir(dir2) != customBase {
 		t.Fatalf("expected profile dir under custom base %q, got %q", customBase, dir2)
 	}

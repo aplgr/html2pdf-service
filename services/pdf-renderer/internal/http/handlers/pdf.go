@@ -377,7 +377,7 @@ func renderPDFWithChrome(html, url string, paper config.PaperSize, margin float6
 	if err != nil {
 		return nil, fmt.Errorf("cannot create temp profile dir: %w", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	allocatorOptions := append(chromedp.DefaultExecAllocatorOptions[:],
 		chromedp.UserDataDir(tmpDir),

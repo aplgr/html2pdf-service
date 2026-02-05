@@ -189,12 +189,12 @@ func TestLoadConfig_PrefersConfigPathEnvVarWhenPresent(t *testing.T) {
 		if hadEnv {
 			_ = os.Setenv("CONFIG_PATH", oldEnv)
 		} else {
-			os.Unsetenv("CONFIG_PATH")
+			_ = os.Unsetenv("CONFIG_PATH")
 		}
 	})
 
 	// 1) No env var -> default path
-	os.Unsetenv("CONFIG_PATH")
+	_ = os.Unsetenv("CONFIG_PATH")
 	cfg := Load()
 	assert.Equal(t, "default:6379", cfg.Cache.RedisHost)
 

@@ -244,7 +244,7 @@ func TestPDFService_getChromePool_DisabledReturnsNil(t *testing.T) {
 
 func Test_validateAndExtractURLParams_valid(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("<b>Hello</b>"))
+		_, _ = w.Write([]byte("<b>Hello</b>"))
 	}))
 	defer srv.Close()
 

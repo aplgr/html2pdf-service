@@ -85,7 +85,7 @@ func openTestDB(t *testing.T) *sql.DB {
 func TestTokenRepository_LoadTokens_DriverSuccess(t *testing.T) {
 	testMode = drvMode{}
 	db := openTestDB(t)
-	defer db.Close()
+	defer func() { _ = db.Close() }()
 
 	r := &TokenRepository{DB: &DB{db: db, dsn: "x"}, DSN: "x"}
 	out, err := r.LoadTokens(context.Background())
@@ -100,7 +100,7 @@ func TestTokenRepository_LoadTokens_DriverSuccess(t *testing.T) {
 func TestTokenRepository_LoadTokens_SchemaError(t *testing.T) {
 	testMode = drvMode{schemaErr: true}
 	db := openTestDB(t)
-	defer db.Close()
+	defer func() { _ = db.Close() }()
 
 	r := &TokenRepository{DB: &DB{db: db, dsn: "x"}, DSN: "x"}
 	if _, err := r.LoadTokens(context.Background()); err == nil {
@@ -111,7 +111,7 @@ func TestTokenRepository_LoadTokens_SchemaError(t *testing.T) {
 func TestTokenRepository_LoadTokens_QueryAndJSONErrors(t *testing.T) {
 	testMode = drvMode{queryErr: true}
 	db := openTestDB(t)
-	defer db.Close()
+	defer func() { _ = db.Close() }()
 	r := &TokenRepository{DB: &DB{db: db, dsn: "x"}, DSN: "x"}
 	if _, err := r.LoadTokens(context.Background()); err == nil {
 		t.Fatalf("expected query error")
@@ -119,7 +119,7 @@ func TestTokenRepository_LoadTokens_QueryAndJSONErrors(t *testing.T) {
 
 	testMode = drvMode{badJSON: true}
 	db2 := openTestDB(t)
-	defer db2.Close()
+	defer func() { _ = db2.Close() }()
 	r2 := &TokenRepository{DB: &DB{db: db2, dsn: "x"}, DSN: "x"}
 	if _, err := r2.LoadTokens(context.Background()); err == nil {
 		t.Fatalf("expected json error")
