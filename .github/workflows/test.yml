@@ -18,9 +18,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        module:
-          - services/auth-service
-          - services/pdf-renderer
+        include:
+          - module: services/auth-service
+            slug: auth-service
+          - module: services/pdf-renderer
+            slug: pdf-renderer
     name: ${{ matrix.module }} tests
 
     steps:
@@ -54,7 +56,7 @@ jobs:
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-${{ replace(matrix.module, '/', '-') }}
+          name: coverage-${{ matrix.slug }}
           path: |
             ${{ matrix.module }}/coverage.out
             ${{ matrix.module }}/coverage-summary.txt
