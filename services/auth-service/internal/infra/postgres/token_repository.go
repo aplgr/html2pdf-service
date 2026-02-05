@@ -34,7 +34,7 @@ func (r *TokenRepository) LoadTokens(ctx context.Context) (map[string]tokens.Ent
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	out := make(map[string]tokens.Entry)
 	for rows.Next() {
