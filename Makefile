@@ -65,7 +65,7 @@ MODULES := services/auth-service services/pdf-renderer
 CGO_ENABLED ?= 1
 export CGO_ENABLED
 
-.PHONY: test-all test test-race test-cover lint fmt tidy clean-tests
+.PHONY: test-all test test-race test-cover test-integration lint fmt tidy clean-tests
 
 # Run everything (tests, race, coverage, lint)
 test-all: test test-race test-cover lint
@@ -89,14 +89,24 @@ test-race:
 # Run coverage for all modules and write coverage profiles + summaries to ./coverage/
 test-cover:
 	@set -euo pipefail; \
-	mkdir -p coverage; \
+	coverage_dir="$$PWD/coverage"; \
+	mkdir -p "$$coverage_dir"; \
 	for m in $(MODULES); do \
 		name=$$(basename $$m); \
+		profile="$$coverage_dir/coverage-$${name}.out"; \
+		html="$$coverage_dir/coverage-$${name}.html"; \
+		txt="$$coverage_dir/coverage-$${name}.txt"; \
 		echo "==> $$m: coverage"; \
-		go -C $$m test ./... -coverprofile="$$PWD/coverage/coverage-$${name}.out"; \
-		echo "==> $$m: coverage (full report saved)"; \
-		go -C $$m tool cover -func="$$PWD/coverage/coverage-$${name}.out" | tee "coverage/coverage-$${name}.txt" | tail -n 1; \
+		go -C $$m test ./... -coverprofile="$$profile"; \
+		echo "==> $$m: coverage (summary + html report)"; \
+		go -C $$m tool cover -func="$$profile" | tee "$$txt" | tail -n 1; \
+		go -C $$m tool cover -html="$$profile" -o "$$html"; \
 	done
+
+
+# Run stack-level integration tests against docker compose services
+test-integration:
+	@./scripts/test_integration.sh
 
 # Run golangci-lint for all modules (expects golangci-lint installed locally)
 lint:

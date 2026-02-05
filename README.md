@@ -158,6 +158,23 @@ WHERE token = 'YOUR_TOKEN';
 - Redis is shared between auth + renderer; keep DBs/prefixes separated to avoid collisions.
 - If you run without Docker, you will need compatible Postgres/Redis endpoints and a local Chrome/Chromium.
 
+### Testing
+
+- Unit tests for both Go modules:
+
+```bash
+make test
+```
+
+- Stack-level integration tests (Docker Compose + Envoy/auth/renderer/Redis/Postgres):
+
+```bash
+make test-integration
+```
+
+The integration suite validates ext_authz token enforcement, rate-limiting behavior, cache population,
+and an end-to-end Chrome render of a known HTML fixture.
+
 ### HTTPS local development (self-signed)
 
 Envoy expects TLS files mounted at `/etc/envoy/tls` (see `deploy/docker-compose.yml`).

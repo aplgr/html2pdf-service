@@ -1,12 +1,15 @@
 package logging
 
 import (
+	"sync"
+
 	"github.com/rs/zerolog"
 	"gopkg.in/natefinch/lumberjack.v2"
 )
 
 // logger is the shared zerolog instance for the application.
 var logger zerolog.Logger
+var loggerMu sync.RWMutex
 
 // InitLogger sets up zerolog with a rolling file backend using lumberjack.
 // Log level and rotation settings are provided via parameters.
@@ -30,16 +33,22 @@ func InitLogger(logPath string, maxSize, maxBackups, maxAge int, compress bool, 
 	}
 
 	// Build logger with timestamp and log level
+	loggerMu.Lock()
 	logger = zerolog.New(multi).
 		With().
 		Timestamp().
 		Logger().
 		Level(level)
+	loggerMu.Unlock()
 }
 
 // Info logs a message with level "info" and optional key-value fields.
 func Info(msg string, fields ...any) {
-	event := logger.Info()
+	loggerMu.RLock()
+	l := logger
+	loggerMu.RUnlock()
+
+	event := l.Info()
 	for i := 0; i < len(fields)-1; i += 2 {
 		key, ok := fields[i].(string)
 		if ok {
@@ -51,7 +60,11 @@ func Info(msg string, fields ...any) {
 
 // Warn logs a message with level "warn" and optional key-value fields.
 func Warn(msg string, fields ...any) {
-	event := logger.Warn()
+	loggerMu.RLock()
+	l := logger
+	loggerMu.RUnlock()
+
+	event := l.Warn()
 	for i := 0; i < len(fields)-1; i += 2 {
 		key, ok := fields[i].(string)
 		if ok {
@@ -63,7 +76,11 @@ func Warn(msg string, fields ...any) {
 
 // Error logs a message with level "error" and optional key-value fields.
 func Error(msg string, fields ...any) {
-	event := logger.Error()
+	loggerMu.RLock()
+	l := logger
+	loggerMu.RUnlock()
+
+	event := l.Error()
 	for i := 0; i < len(fields)-1; i += 2 {
 		key, ok := fields[i].(string)
 		if ok {
@@ -79,10 +96,14 @@ func SetLogLevel(level string) {
 	if err != nil {
 		lvl = zerolog.InfoLevel
 	}
+	loggerMu.Lock()
 	logger = logger.Level(lvl)
+	loggerMu.Unlock()
 }
 
 // SetLoggerForTest replaces the global logger – for test purposes only
 func SetLoggerForTest(l zerolog.Logger) {
+	loggerMu.Lock()
 	logger = l
+	loggerMu.Unlock()
 }
