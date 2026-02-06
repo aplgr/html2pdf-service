@@ -29,6 +29,12 @@ go.work.sum
 # env file
 .env
 
+# TLS/certbot artifacts
+gateway/envoy/tls/*.crt
+gateway/envoy/tls/*.key
+deploy/letsencrypt/
+deploy/certbot/www/
+
 # Editor/IDE
 # .idea/
 # .vscode/

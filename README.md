@@ -20,7 +20,9 @@ It ships with a small local stack (Envoy + Postgres + Redis + docs UI) so you ca
 make start
 ```
 
-`make start` will generate a local self-signed TLS certificate if one is missing.
+`make start` defaults to `mode=dev` and will generate a local self-signed TLS
+certificate if one is missing. In dev mode, the examples index is always
+regenerated.
 
 Stop the stack:
 
@@ -181,16 +183,66 @@ Envoy expects TLS files mounted at `/etc/envoy/tls` (see `deploy/docker-compose.
 You can generate a local self-signed certificate with:
 
 ```bash
-make cert
+make start
 ```
 
-Then start the stack and use `https://localhost/...` (add `-k` to curl to trust the
-self-signed certificate). The TLS files are gitignored so private keys are not committed.
+`make start` (default `mode=dev`) generates a self-signed cert and starts the stack. Use `https://localhost/...`
 
-### HTTPS production notes
+### HTTPS staging/production (Let's Encrypt)
 
-In production, mount your real certificate/key into `/etc/envoy/tls` so Envoy can
-read `/etc/envoy/tls/tls.crt` and `/etc/envoy/tls/tls.key`.
+For staging/production, use publicly trusted certificates (Let's Encrypt) and
+keep self-signed certs only for local dev. `make start mode=prod` does not
+generate self-signed certificates. The Docker Compose stack includes an
+optional certbot workflow (via the `staging`/`prod` profiles) that:
+
+- Obtains initial certificates with HTTP-01.
+- Auto-renews certificates on a schedule.
+- Copies renewed certs into the shared TLS directory Envoy already reads.
+
+**Prereqs**
+
+- Point your DNS (A/AAAA record) at the host running this stack.
+- Ensure ports **80** and **443** are reachable.
+
+**Single-step bootstrap (recommended)**
+
+```bash
+make start mode=prod domain=YOUR_DOMAIN email=YOUR_EMAIL examples=yes
+```
+
+This runs the full flow (bring up the prod profile stack, issue the initial
+cert, start renewals) without rebuilding images. If images are missing locally,
+run `make build` once before the bootstrap. You can skip regenerating the
+examples index in prod by omitting `examples=yes`.
+
+**Enable renewals**
+
+Renewals are handled by the certbot container that starts as part of the
+`make start mode=prod ...` bootstrap. If you stop the stack and want to re-enable
+renewals, just run the same command again.
+
+**Envoy reload on renewal**
+
+Envoy reads `/etc/envoy/tls/tls.crt` and `/etc/envoy/tls/tls.key`. The certbot
+deploy hook copies the renewed `fullchain.pem`/`privkey.pem` into that directory.
+If your Envoy build doesn't hot-reload certs, restart it after renewal:
+
+```bash
+make restart mode=prod domain=YOUR_DOMAIN email=YOUR_EMAIL
+```
+
+**ACME HTTP-01 routing**
+
+Envoy keeps the global HTTP → HTTPS redirect, but it excludes
+`/.well-known/acme-challenge/` so certbot can validate ownership over port 80.
+
+**Optional host paths**
+
+If you prefer different host locations, set:
+
+- `LETSENCRYPT_DIR` (defaults to `deploy/letsencrypt`)
+- `CERTBOT_WEBROOT_DIR` (defaults to `deploy/certbot/www`)
+- `ENVOY_TLS_DIR` (defaults to `gateway/envoy/tls`)
 
 ## Status
 

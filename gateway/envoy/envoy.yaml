@@ -21,6 +21,9 @@ static_resources:
                     - name: https_redirect
                       domains: ["*"]
                       routes:
+                        - match: { prefix: "/.well-known/acme-challenge/" }
+                          route:
+                            cluster: acme_challenge
                         - match: { prefix: "/" }
                           redirect:
                             https_redirect: true
@@ -159,6 +162,20 @@ static_resources:
                     socket_address:
                       address: auth-service
                       port_value: 9000
+
+    - name: acme_challenge
+      connect_timeout: 2s
+      type: STRICT_DNS
+      lb_policy: ROUND_ROBIN
+      load_assignment:
+        cluster_name: acme_challenge
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address:
+                      address: acme-challenge
+                      port_value: 80
 
 admin:
   access_log_path: /tmp/admin_access.log

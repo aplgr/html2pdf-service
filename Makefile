@@ -1,14 +1,19 @@
-.PHONY: help start stop restart build logs ps pull clean examples-index cert
+.PHONY: help start stop stop-internal stop-mode restart build logs ps pull clean examples-index cert
 
 COMPOSE_FILE := deploy/docker-compose.yml
-DC := docker compose -f $(COMPOSE_FILE)
+mode ?= dev
+examples ?= yes
+domain ?=
+email ?=
+PROFILE := $(if $(filter prod,$(mode)),prod,)
+DC := docker compose -f $(COMPOSE_FILE) $(if $(PROFILE),--profile $(PROFILE),)
 
 # Use bash for stricter error handling (pipefail)
 SHELL := /usr/bin/env bash
 
 help:
 	@echo "Targets:"
-	@echo "  make start          Build & start the stack (detached)"
+	@echo "  make start          Start the stack (detached)"
 	@echo "  make stop           Stop the stack (keeps volumes)"
 	@echo "  make restart        Restart the stack"
 	@echo "  make build          Build images"
@@ -18,6 +23,8 @@ help:
 	@echo "  make clean          Stop stack and remove volumes"
 	@echo "  make examples-index Regenerate examples/index.json"
 	@echo "  make cert           Generate a local self-signed TLS cert"
+	@echo "                      mode=prod requires domain=... email=..."
+	@echo "                      examples=yes|no controls examples index regeneration (prod only)"
 
 cert:
 	@mkdir -p gateway/envoy/tls
@@ -32,13 +39,45 @@ examples-index:
 	@./scripts/generate_examples_index.sh ./examples ./examples/index.json
 
 
-start: examples-index cert
-	@$(DC) up -d --build
+start:
+	@if [ "$(mode)" = "prod" ]; then \
+		if [ "$(examples)" = "yes" ]; then \
+			$(MAKE) examples-index; \
+		fi; \
+		if [ -z "$(domain)" ] || [ -z "$(email)" ]; then \
+			echo "ERROR: mode=prod requires domain=... and email=..."; \
+			exit 1; \
+		fi; \
+		mkdir -p deploy/letsencrypt deploy/certbot/www; \
+		docker compose -f $(COMPOSE_FILE) --profile prod up -d --no-build; \
+		docker compose -f $(COMPOSE_FILE) --profile prod run --rm --entrypoint certbot certbot certonly --webroot -w /var/www/certbot \
+			-d $(domain) \
+			-m $(email) --agree-tos --no-eff-email \
+			--deploy-hook /opt/certbot/copy-certs.sh; \
+		docker compose -f $(COMPOSE_FILE) --profile prod up -d certbot --no-build; \
+	else \
+		$(MAKE) examples-index; \
+		$(MAKE) cert; \
+		$(DC) up -d --build --remove-orphans --force-recreate; \
+	fi
 
 stop:
+	@$(MAKE) stop-internal
+	@$(MAKE) stop-internal mode=prod
+
+stop-internal:
 	@$(DC) down
 
-restart: stop start
+stop-mode:
+	@if [ "$(mode)" = "prod" ]; then \
+		$(MAKE) stop-internal mode=prod; \
+	else \
+		$(MAKE) stop-internal; \
+	fi
+
+restart:
+	@$(MAKE) stop-mode mode=$(mode)
+	@$(MAKE) start mode=$(mode) examples=$(examples) domain="$(domain)" email="$(email)"
 
 build: examples-index
 	@$(DC) build
