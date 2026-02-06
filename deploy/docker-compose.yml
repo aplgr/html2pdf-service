@@ -83,12 +83,41 @@ services:
     - 443:443
     volumes:
     - ../gateway/envoy/envoy.yaml:/etc/envoy/envoy.yaml:ro
-    - ../gateway/envoy/tls:/etc/envoy/tls:ro
+    - ${ENVOY_TLS_DIR:-../gateway/envoy/tls}:/etc/envoy/tls:ro
+    - ${LETSENCRYPT_DIR:-../deploy/letsencrypt}:/etc/letsencrypt:ro
     command:
     - envoy
     - -c
     - /etc/envoy/envoy.yaml
     - --log-level
     - info
+  acme-challenge:
+    image: nginx:1.27-alpine
+    profiles:
+    - staging
+    - prod
+    volumes:
+    - ../deploy/certbot/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    - ${CERTBOT_WEBROOT_DIR:-../deploy/certbot/www}:/var/www/certbot:ro
+  certbot:
+    image: certbot/certbot:latest
+    profiles:
+    - staging
+    - prod
+    volumes:
+    - ${LETSENCRYPT_DIR:-../deploy/letsencrypt}:/etc/letsencrypt
+    - ${CERTBOT_WEBROOT_DIR:-../deploy/certbot/www}:/var/www/certbot
+    - ${ENVOY_TLS_DIR:-../gateway/envoy/tls}:/etc/envoy/tls
+    - ../deploy/certbot/copy-certs.sh:/opt/certbot/copy-certs.sh:ro
+    entrypoint:
+    - /bin/sh
+    - -c
+    command:
+    - >-
+      trap exit TERM;
+      while :; do
+        certbot renew --webroot -w /var/www/certbot --deploy-hook /opt/certbot/copy-certs.sh;
+        sleep 12h;
+      done
 volumes:
   postgres_data: null
