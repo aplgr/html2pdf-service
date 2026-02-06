@@ -9,7 +9,6 @@ on:
       - main
 
 env:
-  GO_VERSION: stable
   GOLANGCI_LINT_VERSION: v2.6
   CGO_ENABLED: 1
 
@@ -32,7 +31,8 @@ jobs:
 
       - uses: actions/setup-go@v6
         with:
-          go-version: ${{ env.GO_VERSION }}
+          go-version-file: ${{ matrix.module }}/go.mod
+          cache: true
           cache-dependency-path: ${{ matrix.module }}/go.sum
 
       - name: golangci-lint
