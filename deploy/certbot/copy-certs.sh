@@ -14,4 +14,5 @@ fi
 mkdir -p /etc/envoy/tls
 cp "${RENEWED_LINEAGE}/fullchain.pem" /etc/envoy/tls/tls.crt
 cp "${RENEWED_LINEAGE}/privkey.pem" /etc/envoy/tls/tls.key
-chmod 644 /etc/envoy/tls/tls.crt /etc/envoy/tls/tls.key
+chmod 644 /etc/envoy/tls/tls.crt
+chmod 600 /etc/envoy/tls/tls.key

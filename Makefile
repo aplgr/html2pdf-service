@@ -33,7 +33,8 @@ cert:
 		-keyout gateway/envoy/tls/tls.key \
 		-out gateway/envoy/tls/tls.crt \
 		-subj "/CN=localhost"
-	@chmod 644 gateway/envoy/tls/tls.key gateway/envoy/tls/tls.crt
+	@chmod 644 gateway/envoy/tls/tls.crt
+	@chmod 600 gateway/envoy/tls/tls.key
 
 examples-index:
 	@./scripts/generate_examples_index.sh ./examples ./examples/index.json
