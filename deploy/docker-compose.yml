@@ -74,6 +74,9 @@ services:
     - '8080'
   envoy:
     image: envoyproxy/envoy:v1.30-latest
+    # Run Envoy as a non-root user matching host UID/GID so a host-mounted
+    # tls.key with mode 600 remains readable without elevating container privileges.
+    user: "${LOCAL_UID:-1000}:${LOCAL_GID:-1000}"
     depends_on:
     - docs
     - html2pdf
@@ -101,6 +104,9 @@ services:
     - ${CERTBOT_WEBROOT_DIR:-../deploy/certbot/www}:/var/www/certbot:ro
   certbot:
     image: certbot/certbot:latest
+    environment:
+      LOCAL_UID: ${LOCAL_UID:-1000}
+      LOCAL_GID: ${LOCAL_GID:-1000}
     profiles:
     - staging
     - prod
