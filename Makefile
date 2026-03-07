@@ -5,8 +5,10 @@ mode ?= dev
 examples ?= yes
 domain ?=
 email ?=
+LOCAL_UID ?= $(shell id -u)
+LOCAL_GID ?= $(shell id -g)
 PROFILE := $(if $(filter prod,$(mode)),prod,)
-DC := docker compose -f $(COMPOSE_FILE) $(if $(PROFILE),--profile $(PROFILE),)
+DC := LOCAL_UID=$(LOCAL_UID) LOCAL_GID=$(LOCAL_GID) docker compose -f $(COMPOSE_FILE) $(if $(PROFILE),--profile $(PROFILE),)
 
 # Use bash for stricter error handling (pipefail)
 SHELL := /usr/bin/env bash
@@ -50,12 +52,12 @@ start:
 			exit 1; \
 		fi; \
 		mkdir -p deploy/letsencrypt deploy/certbot/www; \
-		docker compose -f $(COMPOSE_FILE) --profile prod up -d --no-build; \
-		docker compose -f $(COMPOSE_FILE) --profile prod run --rm --entrypoint certbot certbot certonly --webroot -w /var/www/certbot \
+		LOCAL_UID=$(LOCAL_UID) LOCAL_GID=$(LOCAL_GID) docker compose -f $(COMPOSE_FILE) --profile prod up -d --no-build; \
+		LOCAL_UID=$(LOCAL_UID) LOCAL_GID=$(LOCAL_GID) docker compose -f $(COMPOSE_FILE) --profile prod run --rm --entrypoint certbot certbot certonly --webroot -w /var/www/certbot \
 			-d $(domain) \
 			-m $(email) --agree-tos --no-eff-email \
 			--deploy-hook /opt/certbot/copy-certs.sh; \
-		docker compose -f $(COMPOSE_FILE) --profile prod up -d certbot --no-build; \
+		LOCAL_UID=$(LOCAL_UID) LOCAL_GID=$(LOCAL_GID) docker compose -f $(COMPOSE_FILE) --profile prod up -d certbot --no-build; \
 	else \
 		$(MAKE) examples-index; \
 		$(MAKE) cert; \
