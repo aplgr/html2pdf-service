@@ -3,7 +3,7 @@ module pdf-renderer
 go 1.24
 
 require (
-	github.com/alicebob/miniredis/v2 v2.35.0
+	github.com/alicebob/miniredis/v2 v2.37.0
 	github.com/chromedp/cdproto v0.0.0-20250715215929-4738bcb231c7
 	github.com/chromedp/chromedp v0.13.7
 	github.com/gofiber/fiber/v2 v2.52.8
