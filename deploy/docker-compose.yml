@@ -8,7 +8,7 @@ services:
     - --maxmemory-policy
     - ${REDIS_MAXMEMORY_POLICY:-volatile-lru}
   postgres:
-    image: postgres:16-alpine
+    image: postgres:18-alpine
     restart: unless-stopped
     environment:
       POSTGRES_DB: html2pdf
@@ -35,7 +35,7 @@ services:
     - ../logs:/logs
     - ../services/auth-service/config/auth-service.yaml:/app/config/auth-service.yaml:ro
   auth-migrate:
-    image: postgres:16
+    image: postgres:18
     depends_on:
     - postgres
     environment:
