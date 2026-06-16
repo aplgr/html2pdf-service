@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-FROM alpine:3.23 AS examples_index
+FROM alpine:3.24 AS examples_index
 
 RUN apk add --no-cache bash coreutils findutils grep sed
 
