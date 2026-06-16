@@ -7,7 +7,7 @@ require (
 	github.com/chromedp/cdproto v0.0.0-20250715215929-4738bcb231c7
 	github.com/chromedp/chromedp v0.13.7
 	github.com/gofiber/fiber/v2 v2.52.13
-	github.com/redis/go-redis/v9 v9.19.0
+	github.com/redis/go-redis/v9 v9.20.1
 	github.com/rs/xid v1.6.0
 	github.com/rs/zerolog v1.35.1
 	github.com/stretchr/testify v1.11.1
