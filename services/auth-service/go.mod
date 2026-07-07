@@ -3,7 +3,7 @@ module auth-service
 go 1.25.0
 
 require (
-	github.com/gofiber/fiber/v2 v2.52.13
+	github.com/gofiber/fiber/v2 v2.52.14
 	github.com/gofiber/storage/memory/v2 v2.1.1
 	github.com/gofiber/storage/redis/v2 v2.0.3
 	github.com/jackc/pgx/v5 v5.9.2
