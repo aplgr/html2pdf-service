@@ -3,11 +3,11 @@ module pdf-renderer
 go 1.26
 
 require (
-	github.com/alicebob/miniredis/v2 v2.37.0
 	github.com/chromedp/cdproto v0.0.0-20260321001828-e3e3800016bc
 	github.com/chromedp/chromedp v0.15.1
-	github.com/gofiber/fiber/v2 v2.52.13
-	github.com/redis/go-redis/v9 v9.19.0
+	github.com/alicebob/miniredis/v2 v2.38.0
+	github.com/gofiber/fiber/v2 v2.52.14
+	github.com/redis/go-redis/v9 v9.21.0
 	github.com/rs/xid v1.6.0
 	github.com/rs/zerolog v1.35.1
 	github.com/stretchr/testify v1.11.1

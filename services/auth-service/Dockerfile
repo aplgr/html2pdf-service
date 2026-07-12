@@ -8,7 +8,7 @@ COPY . .
 # Build a small static binary.
 RUN CGO_ENABLED=0 go build -trimpath -ldflags "-s -w" -o auth-service ./cmd/auth-service
 
-FROM alpine:3.23
+FROM alpine:3.24
 
 RUN apk add --no-cache ca-certificates dumb-init
 

@@ -73,7 +73,7 @@ services:
     expose:
     - '8080'
   envoy:
-    image: envoyproxy/envoy:v1.30-latest
+    image: envoyproxy/envoy:v1.38-latest
     # Run Envoy as a non-root user matching host UID/GID so a host-mounted
     # tls.key with mode 600 remains readable without elevating container privileges.
     user: "${LOCAL_UID:-1000}:${LOCAL_GID:-1000}"
@@ -95,7 +95,7 @@ services:
     - --log-level
     - info
   acme-challenge:
-    image: nginx:1.29-alpine
+    image: nginx:1.31-alpine
     profiles:
     - staging
     - prod
