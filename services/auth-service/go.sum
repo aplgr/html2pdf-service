@@ -13,10 +13,10 @@ github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSs
 github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f h1:lO4WD4F/rVNCu3HqELle0jiPLLBs70cWOduZpkS1E78=
 github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f/go.mod h1:cuUVRXasLTGF7a8hSLbxyZXjz+1KgoB3wDUb6vlszIc=
 github.com/godbus/dbus/v5 v5.0.4/go.mod h1:xhWf0FNVPg57R7Z0UbKHbJfkEywrmjJnf7w5xrFpKfA=
+github.com/gofiber/storage/memory/v2 v2.1.2 h1:IGOMSgnlCv/Dh1rkXA9G69kHIAywUqPjaGFUR5XATE0=
+github.com/gofiber/storage/memory/v2 v2.1.2/go.mod h1:R3dBncEPAGt83cQleHFXdT/t7Pep6+5ED0rBfJSqjJg=
 github.com/gofiber/fiber/v2 v2.52.14 h1:Of3L+9qVFaQNwPlcmEdl5IIodHz8BSE0j37R7rWu4pE=
 github.com/gofiber/fiber/v2 v2.52.14/go.mod h1:YEcBbO/FB+5M1IZNBP9FO3J9281zgPAreiI1oqg8nDw=
-github.com/gofiber/storage/memory/v2 v2.1.1 h1:q0ZsCyUtdVh6dCPRhIHEIC5YCK8zKL2pKTBfPWJz71A=
-github.com/gofiber/storage/memory/v2 v2.1.1/go.mod h1:+KBbnA91Vb+zWlkw668Fcg23UAzds3Z6fxV82jlq3SU=
 github.com/gofiber/storage/redis/v2 v2.0.3 h1:X/miioVi4OMn5QK3fpfownSm617uUTpycJGrjR5goSo=
 github.com/gofiber/storage/redis/v2 v2.0.3/go.mod h1:Qr0p2kHbkLLHWSDwxxRBVqmJWuhlDkVnCArpqD0I8No=
 github.com/gofiber/utils v1.1.0 h1:vdEBpn7AzIUJRhe+CiTOJdUcTg4Q9RK+pEa0KPbLdrM=
