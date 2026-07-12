@@ -2,7 +2,10 @@
 set -euo pipefail
 
 COMPOSE_FILE="deploy/docker-compose.yml"
-DC=(docker compose -f "$COMPOSE_FILE")
+COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-html2pdf_integration}"
+export COMPOSE_PROJECT_NAME
+
+DC=(docker compose -p "$COMPOSE_PROJECT_NAME" -f "$COMPOSE_FILE")
 BASE_URL="https://localhost"
 API_URL="$BASE_URL/api/v0/pdf"
 TOKEN="abc123-test-first-token"
@@ -10,7 +13,7 @@ INVALID_TOKEN="definitely-invalid-token"
 HTML_FIXTURE="examples/invoice.html"
 
 cleanup() {
-  "${DC[@]}" down >/dev/null 2>&1 || true
+  "${DC[@]}" down -v >/dev/null 2>&1 || true
 }
 trap cleanup EXIT
 
@@ -68,6 +71,7 @@ wait_for_token_reload() {
 }
 
 log "Starting integration stack"
+cleanup
 make start
 wait_for_https
 wait_for_token_reload

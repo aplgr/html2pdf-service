@@ -158,6 +158,8 @@ WHERE token = 'YOUR_TOKEN';
 
 - The auth component lives in `auth-service/` and ships with its own README + unit tests.
 - Redis is shared between auth + renderer; keep DBs/prefixes separated to avoid collisions.
+- PostgreSQL 18 uses a versioned data directory under `/var/lib/postgresql`. Fresh Docker volumes work out of the box;
+  existing PostgreSQL 16 dev volumes need `pg_upgrade` or, if disposable, `make clean` before starting the stack again.
 - If you run without Docker, you will need compatible Postgres/Redis endpoints and a local Chrome/Chromium.
 
 ### Testing

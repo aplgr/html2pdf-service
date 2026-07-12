@@ -9,7 +9,7 @@ on:
       - main
 
 env:
-  GOLANGCI_LINT_VERSION: v2.6
+  GOLANGCI_LINT_VERSION: v2.12.2
   CGO_ENABLED: 1
 
 permissions:
