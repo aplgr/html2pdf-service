@@ -6,7 +6,7 @@ require (
 	github.com/gofiber/fiber/v2 v2.52.14
 	github.com/gofiber/storage/memory/v2 v2.1.1
 	github.com/gofiber/storage/redis/v2 v2.0.3
-	github.com/jackc/pgx/v5 v5.9.2
+	github.com/jackc/pgx/v5 v5.10.0
 	github.com/rs/zerolog v1.34.0
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 	gopkg.in/yaml.v3 v3.0.1
