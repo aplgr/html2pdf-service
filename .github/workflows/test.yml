@@ -65,7 +65,6 @@ jobs:
             ${{ matrix.module }}/coverage-summary.txt
 
   integration:
-    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     name: docker compose integration tests
     needs: test
