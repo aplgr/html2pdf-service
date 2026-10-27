@@ -95,6 +95,13 @@ static_resources:
                       "@type": type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthz
                       transport_api_version: V3
                       failure_mode_allow: false
+                      allowed_headers:
+                        patterns:
+                          - exact: x-api-key
+                          - exact: user-agent
+                          - exact: x-forwarded-for
+                          - exact: x-request-id
+                          - exact: x-envoy-external-address
                       http_service:
                         server_uri:
                           uri: http://auth-service:9000
@@ -103,14 +110,6 @@ static_resources:
                         # Envoy will append the original request path to this prefix.
                         # The auth-service accepts both /ext-authz and /ext-authz/*.
                         path_prefix: "/ext-authz"
-                        authorization_request:
-                          allowed_headers:
-                            patterns:
-                              - exact: x-api-key
-                              - exact: user-agent
-                              - exact: x-forwarded-for
-                              - exact: x-request-id
-                              - exact: x-envoy-external-address
                         authorization_response:
                           allowed_upstream_headers:
                             patterns:
@@ -178,7 +177,11 @@ static_resources:
                       port_value: 80
 
 admin:
-  access_log_path: /tmp/admin_access.log
+  access_log:
+    - name: envoy.access_loggers.file
+      typed_config:
+        "@type": type.googleapis.com/envoy.extensions.access_loggers.file.v3.FileAccessLog
+        path: /tmp/admin_access.log
   address:
     socket_address:
       address: 0.0.0.0
