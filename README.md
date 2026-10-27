@@ -43,7 +43,7 @@ The curl examples for **POST HTML → PDF** and **GET URL → PDF** are in the [
 ## Requirements
 
 - **Docker + Docker Compose** (recommended, easiest)
-- Optional for local dev (without Docker): **Go 1.23+** and **Chrome/Chromium**
+- Optional for local dev (without Docker): **Go 1.27+** and **Chrome/Chromium**
   - plus **Postgres** and **Redis** if you still want auth + rate limits + caching
 
 ## What it does
@@ -156,6 +156,7 @@ WHERE token = 'YOUR_TOKEN';
 
 ## Development notes
 
+- Both Go modules and Docker builder stages use Go 1.27. CI selects the Go version from each module's `go.mod`.
 - The auth component lives in `auth-service/` and ships with its own README + unit tests.
 - Redis is shared between auth + renderer; keep DBs/prefixes separated to avoid collisions.
 - PostgreSQL 18 uses a versioned data directory under `/var/lib/postgresql`. Fresh Docker volumes work out of the box;
