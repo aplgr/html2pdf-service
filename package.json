@@ -7,7 +7,7 @@
     "build:docs": "npm run docs:vendor"
   },
   "dependencies": {
-    "alpinejs": "^3.17.4",
+    "alpinejs": "^3.17.5",
     "bootstrap": "^5.3.3",
     "bootstrap-icons": "^1.13.2",
     "htmx.org": "^2.0.11"
